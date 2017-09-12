@@ -7,6 +7,7 @@ Created on 12.09.2016
 from ModbusClient import *
 import time
 import OSC
+import thread
 
 def click(msg):
     global cc
@@ -79,6 +80,47 @@ def moveMotor(unit, howmany):
     modbusClient.WriteMultipleCoils(0, [True,True,True,True,True,False,True])
     modbusClient.WriteMultipleRegisters(0, ConvertFloatToTwoRegisters(3.141517))
     '''
+
+def handler(socket,fortuple):
+    while True:
+        try:
+            data, addr = sock.recvfrom(1024)
+            if ((len(data) > 18) and (data[0:8] == "Art-Net\x00")):
+                rawbytes = map(ord, data)
+                opcode = rawbytes[8] + (rawbytes[9] << 8)
+                protocolVersion = (rawbytes[10] << 8) + rawbytes[11]
+                if ((opcode == 0x5000) and (protocolVersion >= 14)):
+                    sequence = rawbytes[12]
+                    physical = rawbytes[13]
+                    sub_net = (rawbytes[14] & 0xF0) >> 4
+                    universe = rawbytes[14] & 0x0F
+                    net = rawbytes[15]
+                    rgb_length = (rawbytes[16] << 8) + rawbytes[17]
+                    #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
+                    #(sequence, physical, sub_net, universe, net, rgb_length)
+                    idx = 18
+                    x = 0
+                    y = 0
+                    while ((idx < (rgb_length+18)) and (y < 1)):
+                        r = rawbytes[idx]
+                        idx += 1
+                        g = rawbytes[idx]
+                        idx += 1
+                        b = rawbytes[idx]
+                        idx += 1
+                        print "x %d y %d r %d g %d b %d" % (x,y,r,g,b)
+                        #unicorn.set_pixel(x, y, r, g, b)
+                        x += 1
+                        if (x > 24):
+                            x = 0
+                            y += 1
+            
+        except ValueError:
+            pass    
+        except IndexError:
+            pass
+    
+    
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 6666))
 
@@ -98,6 +140,10 @@ dividee = (950000000/256)
 for ii in range(0,256):
     artdmx[ii] = int(ii * dividee)
     print (artdmx[ii])
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock.bind(("0.0.0.0", 6454))
+thread.start_new_thread(handler,(sock,0))
     
 while True:
     for ii in range(1,33):
