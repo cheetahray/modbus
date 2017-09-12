@@ -9,10 +9,11 @@ import Exceptions
 import socket
 import struct
 from builtins import int
+'''
 from _testcapi import instancemethod
 from test.test_array import SIGNED_INT16_BE
 from tkinter import DoubleVar
-
+'''
 class ModbusClient(object):
     """
     Implementation of a Modbus TCP Client and a Modbsu RTU Master
@@ -67,7 +68,7 @@ class ModbusClient(object):
                 self.ser.parity = serial.PARITY_ODD
             elif self._parity == 2:               
                 self.ser.parity = serial.PARITY_NONE 
-            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=1, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
+            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.001, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
         print (self.ser)
         if (self.tcpClientSocket is not None):  
             self.tcpClientSocket.connect((self._ipAddress, self._port))
@@ -85,7 +86,7 @@ class ModbusClient(object):
         self.__connected = False
         
             
-    def ReadDiscreteInputs(self, startingAddress, quantity):
+    def ReadDiscreteInputs(self, startingAddress, quantity, unit):
         """
         Read Discrete Inputs from Master device (Function code 2)
         startingAddress: First discrete input to be read
@@ -109,7 +110,7 @@ class ModbusClient(object):
         quatityLSB = quantity&0xFF
         quatityMSB = (quantity&0xFF00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -138,7 +139,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
             self.tcpClientSocket.send(data)
             if (quantity % 8 != 0):
                 bytesToRead = 10+int(quantity/8)
@@ -161,7 +162,7 @@ class ModbusClient(object):
 
 
 
-    def ReadCoils(self, startingAddress, quantity):
+    def ReadCoils(self, startingAddress, quantity, unit):
         """
         Read Coils from Master device (Function code 1)
         startingAddress:  First coil to be read
@@ -185,7 +186,7 @@ class ModbusClient(object):
         quatityLSB = quantity&0xFF
         quatityMSB = (quantity&0xFF00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -214,7 +215,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
             self.tcpClientSocket.send(data)
             if (quantity % 8 != 0):
                 bytesToRead = 10+int(quantity/8)
@@ -238,7 +239,7 @@ class ModbusClient(object):
         
         
 
-    def ReadHoldingRegisters(self, startingAddress, quantity):
+    def ReadHoldingRegisters(self, startingAddress, quantity, unit):
         """
         Read Holding Registers from Master device (Function code 3)
         startingAddress: First holding register to be read
@@ -262,7 +263,7 @@ class ModbusClient(object):
         quatityLSB = quantity&0xFF
         quatityMSB = (quantity&0xFF00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -273,24 +274,27 @@ class ModbusClient(object):
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
             #print (data)
-            if ((data[1] == 0x83) & (data[2] == 0x01)):
-                raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
-            if ((data[1] == 0x83) & (data[2] == 0x02)):
-                raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
-            if ((data[1] == 0x83) & (data[2] == 0x03)):
-                raise Exceptions.QuantityInvalidException("quantity invalid");
-            if ((data[1] == 0x83) & (data[2] == 0x04)):
-                raise Exceptions.ModbusException("error reading");
             myList = list()
-            for i in range(0, quantity):
-                myList.append((data[i*2+3]<<8) +data[i*2+4])            
+            try:
+                if ((data[1] == 0x83) & (data[2] == 0x01)):
+                    raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
+                if ((data[1] == 0x83) & (data[2] == 0x02)):
+                    raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
+                if ((data[1] == 0x83) & (data[2] == 0x03)):
+                    raise Exceptions.QuantityInvalidException("quantity invalid");
+                if ((data[1] == 0x83) & (data[2] == 0x04)):
+                    raise Exceptions.ModbusException("error reading");
+                for i in range(0, quantity):
+                    myList.append((data[i*2+3]<<8) +data[i*2+4])            
+            except IndexError:
+                pass
             return myList 
         else:
             protocolIdentifierLSB = 0x00;
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
             self.tcpClientSocket.send(data)
             bytesToRead = 9+int(quantity*2)
             data = self.tcpClientSocket.recv(bytesToRead)
@@ -307,7 +311,7 @@ class ModbusClient(object):
                 myList.append((data[i*2+3+6]<<8) +data[i*2+4+6])            
             return myList 
 
-    def ReadInputRegisters(self, startingAddress, quantity):
+    def ReadInputRegisters(self, startingAddress, quantity, unit):
         """
         Read Input Registers from Master device (Function code 4)
         startingAddress :  First input register to be read
@@ -331,7 +335,7 @@ class ModbusClient(object):
         quatityLSB = quantity&0xFF
         quatityMSB = (quantity&0xFF00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -358,7 +362,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,quatityMSB,quatityLSB] )
             self.tcpClientSocket.send(data)
             bytesToRead = 9+int(quantity*2)
             data = self.tcpClientSocket.recv(bytesToRead)
@@ -375,7 +379,7 @@ class ModbusClient(object):
                 myList.append((data[i*2+3+6]<<8) +data[i*2+4+6])            
             return myList 
         
-    def WriteSingleCoil(self, startingAddress, value):
+    def WriteSingleCoil(self, startingAddress, value, unit):
         """
         Write single Coil to Master device (Function code 5)
         startingAddress: Coil to be written
@@ -400,7 +404,7 @@ class ModbusClient(object):
             valueLSB = 0x00
             valueMSB = (0x00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -417,7 +421,7 @@ class ModbusClient(object):
                 raise Exceptions.QuantityInvalidException("quantity invalid");
             if ((data[1] == 0x85) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
-            if data[1] == self._unitIdentifier:
+            if data[1] == unit:
                 return True 
             else:
                 return False  
@@ -426,7 +430,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB] )
             self.tcpClientSocket.send(data)
             bytesToRead = 12
             data = self.tcpClientSocket.recv(bytesToRead)
@@ -442,7 +446,7 @@ class ModbusClient(object):
                 return True 
    
         
-    def WriteSingleRegister(self, startingAddress, value):
+    def WriteSingleRegister(self, startingAddress, value, unit):
         """
         Write single Register to Master device (Function code 6)
         startingAddress:  Register to be written
@@ -463,7 +467,7 @@ class ModbusClient(object):
         valueLSB = value&0xFF
         valueMSB = (value&0xFF00) >> 8
         if (self.ser is not None):
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB,0,0] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB,0,0] )
             CRC = self.__calculateCRC(data, len(data)-2, 0)
             CrcLSB = CRC&0xFF
             CrcMSB = (CRC&0xFF00) >> 8
@@ -472,6 +476,7 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
+            #print(data)
             if ((data[1] == 0x86) & (data[2] == 0x01)):
                 raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
             if ((data[1] == 0x86) & (data[2] == 0x02)):
@@ -480,7 +485,7 @@ class ModbusClient(object):
                 raise Exceptions.QuantityInvalidException("quantity invalid");
             if ((data[1] == 0x86) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
-            if data[1] == self._unitIdentifier:
+            if data[1] == unit:
                 return True 
             else:
                 return False   
@@ -489,7 +494,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB,valueMSB,valueLSB] )
             self.tcpClientSocket.send(data)
             bytesToRead = 12
             data = self.tcpClientSocket.recv(bytesToRead)
@@ -504,7 +509,7 @@ class ModbusClient(object):
 
                 return True            
              
-    def WriteMultipleCoils(self, startingAddress, values):
+    def WriteMultipleCoils(self, startingAddress, values, unit):
         """
         Write multiple coils to Master device (Function code 15)
         startingAddress :  First coil to be written
@@ -540,7 +545,7 @@ class ModbusClient(object):
  
         valueToWrite.append(singleCoilValue)
         if (self.ser is not None):    
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
             data.append(len(valueToWrite))   #Bytecount 
             for i in range (0, len(valueToWrite)):
                 data.append(valueToWrite[i]&0xFF)      
@@ -561,7 +566,7 @@ class ModbusClient(object):
                 raise Exceptions.QuantityInvalidException("quantity invalid");
             if ((data[1] == 0x8F) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
-            if data[1] == self._unitIdentifier:
+            if data[1] == unit:
                 return True 
             else:
                 return False 
@@ -570,7 +575,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
             data.append(len(valueToWrite))   #Bytecount 
             for i in range (0, len(valueToWrite)):
                 data.append(valueToWrite[i]&0xFF)      
@@ -589,7 +594,7 @@ class ModbusClient(object):
             return True 
            
 
-    def WriteMultipleRegisters(self, startingAddress, values):
+    def WriteMultipleRegisters(self, startingAddress, values, unit):
         """
         Write multiple registers to Master device (Function code 16)
         startingAddress: First register to be written
@@ -613,7 +618,7 @@ class ModbusClient(object):
         for i in range(0, len(values)):
             valueToWrite.append(values[i]);    
         if (self.ser is not None):       
-            data = bytearray([self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
+            data = bytearray([unit, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
             data.append(len(valueToWrite)*2)   #Bytecount 
             for i in range (0, len(valueToWrite)):                 
                 data.append((valueToWrite[i]&0xFF00) >> 8) 
@@ -634,7 +639,7 @@ class ModbusClient(object):
                 raise Exceptions.QuantityInvalidException("quantity invalid");
             if ((data[1] == 0x90) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
-            if data[1] == self._unitIdentifier:
+            if data[1] == unit:
                 return True 
             else:
                 return False     
@@ -643,7 +648,7 @@ class ModbusClient(object):
             protocolIdentifierMSB = 0x00;
             lengthLSB = 0x06;
             lengthMSB = 0x00;
-            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,self._unitIdentifier, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
+            data = bytearray([transactionIdentifierMSB, transactionIdentifierLSB, protocolIdentifierMSB, protocolIdentifierLSB,lengthMSB,lengthLSB,unit, functionCode, startingAddressMSB, startingAddressLSB, quantityMSB, quantityLSB] )
             data.append(len(valueToWrite)*2)   #Bytecount 
             for i in range (0, len(valueToWrite)):                 
                 data.append((valueToWrite[i]&0xFF00) >> 8) 
@@ -785,45 +790,3 @@ class Stopbits():
     doubleValue: Value to be converted
     return: 16 Bit Register values int[]
     """  
-def ConvertDoubleToTwoRegisters(doubleValue: int) -> list:
-    myList = list()
-    myList.append(int(doubleValue & 0x0000FFFF))         #Append Least Significant Word      
-    myList.append(int((doubleValue & 0xFFFF0000)>>16))   #Append Most Significant Word      
-
-    return myList
-    
-    """
-    Convert 32 Bit real Value to two 16 Bit Value to send as Modbus Registers
-    floatValue: Value to be converted
-    return: 16 Bit Register values int[]
-    """  
-def ConvertFloatToTwoRegisters(floatValue: float) -> list:
-    myList = list()
-    s = struct.pack('<f', floatValue)       #little endian
-    myList.append(s[0] | (s[1]<<8))         #Append Least Significant Word  
-    myList.append(s[2] | (s[3]<<8))         #Append Most Significant Word      
-
-    return myList
-
-    """
-    Convert two 16 Bit Registers to 32 Bit long value - Used to receive 32 Bit values from Modbus (Modbus Registers are 16 Bit long)
-    registers: 16 Bit Registers
-    return: 32 bit value
-    """  
-def ConvertRegistersToDouble(registers: list) -> int:
-    returnValue = (int(registers[0]) & 0x0000FFFF) | (int((registers[1])<<16) & 0xFFFF0000)
-    return returnValue
-
-    """
-    Convert two 16 Bit Registers to 32 Bit real value - Used to receive float values from Modbus (Modbus Registers are 16 Bit long)
-    registers: 16 Bit Registers
-    return: 32 bit value real
-    """  
-def ConvertRegistersToFloat(registers: list) -> float:
-    b = bytearray(4)
-    b [0] = registers[0] & 0xff
-    b [1] = (registers[0] & 0xff00)>>8 
-    b [2] = (registers[1] & 0xff)
-    b [3] = (registers[1] & 0xff00)>>8
-    returnValue = struct.unpack('<f', b)            #little Endian
-    return returnValue
