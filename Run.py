@@ -8,6 +8,8 @@ from ModbusClient import *
 import time
 import OSC
 import thread
+import sys
+import types
 
 def click(msg):
     global cc
@@ -120,7 +122,25 @@ def handler(socket,fortuple):
         except IndexError:
             pass
     
-    
+def user_callback(path, tags, args, source):
+    # which user will be determined by path:
+    # we just throw away all slashes and join together what's left
+    # user = ''.join(path.split("/"))
+    # tags will contain 'fff'
+    # args is a OSCMessage with data
+    # source is where the message came from (in case you need to reply)
+    print ("Now do something with", args[0]) 
+
+# user script that's called by the game engine every frame
+def each_frame():
+    # simulate a "game engine"
+    while True:
+        # clear timed_out flag
+        server.timed_out = False
+        # handle all pending requests then return
+        if not server.timed_out:
+            server.handle_request()
+
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 6666))
 
@@ -143,7 +163,23 @@ for ii in range(0,256):
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.bind(("0.0.0.0", 6454))
-thread.start_new_thread(handler,(sock,0))
+
+server = OSC.OSCServer( ("localhost", 7110) )
+server.timeout = 0.001
+
+# this method of reporting timeouts only works by convention
+# that before calling handle_request() field .timed_out is 
+# set to False
+def handle_timeout(self):
+    self.timed_out = True
+
+# funny python's way to add a method to an instance of a class
+server.handle_timeout = types.MethodType(handle_timeout, server)
+
+server.addMsgHandler( "/user/1", user_callback )
+
+#thread.start_new_thread(handler,(sock,0))
+thread.start_new_thread(each_frame,())
     
 while True:
     for ii in range(1,33):
@@ -151,3 +187,4 @@ while True:
         #time.sleep(0.001)
 
 modbusClient.close()
+server.close()
