@@ -10,6 +10,7 @@ import OSC
 import thread
 import sys
 import types
+import math
 
 def click(msg):
     global cc
@@ -61,15 +62,15 @@ def moveMotor(unit, howmany):
         modbusClient.WriteSingleRegister(2308, 0)
         modbusClient.WriteSingleRegister(2304, 0)
         '''
-        modbusClient.WriteSingleRegister(0x0901, 0, unit)
-        '''
+        #modbusClient.WriteSingleRegister(0x0901, 0, unit)
+        
         modbusClient.WriteSingleRegister(0x0901, 4, unit)
         modbusClient.WriteSingleRegister(0x0902, 1000, unit)
         modbusClient.WriteSingleRegister(0x0903, 200, unit)
         #print ("{:04x}".format(pos&0xFFFF))
-        modbusClient.WriteSingleRegister(0x0905, math.fabs(howmany) & 0xFFFF, unit)
+        modbusClient.WriteSingleRegister(0x0905, math.abs(howmany) & 0xFFFF, unit)
         #print ("{:04x}".format(pos >> 16))
-        modbusClient.WriteSingleRegister(0x0906, math.fabs(howmany) >> 16, unit)
+        modbusClient.WriteSingleRegister(0x0906, math.abs(howmany) >> 16, unit)
         if(howmany > 0):
             modbusClient.WriteSingleRegister(0x0907, 1, unit)
         else:
@@ -79,7 +80,7 @@ def moveMotor(unit, howmany):
         #print (holdingRegisters)
         pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
         print (pos[unit])
-        '''
+    
     else:
         print ("something wrong")
     '''
@@ -185,12 +186,13 @@ server.addMsgHandler( "/user/1", user_callback )
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
     
-while False:
+while True:
+    '''
     for ii in range(1,33):
         readInput(ii)
-        #time.sleep(0.001)
-
-moveMotor(1, 0)
+    '''
+    moveMotor(1, 1)
+    time.sleep(1)
 
 modbusClient.close()
 sock.close()
