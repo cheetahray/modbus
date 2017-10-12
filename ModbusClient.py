@@ -68,7 +68,7 @@ class ModbusClient(object):
                 self.ser.parity = serial.PARITY_ODD
             elif self._parity == 2:               
                 self.ser.parity = serial.PARITY_NONE 
-            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.001, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
+            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.015, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
         print (self.ser)
         if (self.tcpClientSocket is not None):  
             self.tcpClientSocket.connect((self._ipAddress, self._port))
@@ -476,7 +476,6 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
-            print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]))
             if ((data[1] == 0x86) & (data[2] == 0x01)):
                 raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
             if ((data[1] == 0x86) & (data[2] == 0x02)):
@@ -486,6 +485,7 @@ class ModbusClient(object):
             if ((data[1] == 0x86) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
             if data[1] == unit:
+                print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]))
                 return True 
             else:
                 return False   

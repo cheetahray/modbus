@@ -10,7 +10,6 @@ import OSC
 import thread
 import sys
 import types
-import math
 
 def click(msg):
     global cc
@@ -68,9 +67,9 @@ def moveMotor(unit, howmany):
         modbusClient.WriteSingleRegister(0x0902, 1000, unit)
         modbusClient.WriteSingleRegister(0x0903, 200, unit)
         #print ("{:04x}".format(pos&0xFFFF))
-        modbusClient.WriteSingleRegister(0x0905, math.abs(howmany) & 0xFFFF, unit)
+        modbusClient.WriteSingleRegister(0x0905, abs(howmany) & 0xFFFF, unit)
         #print ("{:04x}".format(pos >> 16))
-        modbusClient.WriteSingleRegister(0x0906, math.abs(howmany) >> 16, unit)
+        modbusClient.WriteSingleRegister(0x0906, abs(howmany) >> 16, unit)
         if(howmany > 0):
             modbusClient.WriteSingleRegister(0x0907, 1, unit)
         else:
@@ -149,7 +148,7 @@ def each_frame():
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 6666))
 
-modbusClient = ModbusClient('/dev/ttyS26') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM31') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -191,7 +190,7 @@ while True:
     for ii in range(1,33):
         readInput(ii)
     '''
-    moveMotor(1, 1)
+    moveMotor(1, 100000)
     time.sleep(1)
 
 modbusClient.close()
