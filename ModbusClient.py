@@ -38,7 +38,7 @@ class ModbusClient(object):
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
             self.serialPort = params[0]
-            self._baudrate = 9600
+            self._baudrate = 115200
             self._parity = Parity.even
             self._stopbits = Stopbits.one
             self.__transactionIdentifier = 0
@@ -273,7 +273,7 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
-            #print (data)
+            #print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]))
             myList = list()
             try:
                 if ((data[1] == 0x83) & (data[2] == 0x01)):
@@ -285,7 +285,7 @@ class ModbusClient(object):
                 if ((data[1] == 0x83) & (data[2] == 0x04)):
                     raise Exceptions.ModbusException("error reading");
                 for i in range(0, quantity):
-                    myList.append((data[i*2+3]<<8) +data[i*2+4])            
+                    myList.append( ( ord( data[i*2+3] ) << 8 ) + ord( data[i*2+4] ) )            
             except IndexError:
                 pass
             return myList 

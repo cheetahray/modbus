@@ -27,10 +27,11 @@ def readInput(unit):
     if(len(holdingRegisters)):
         di9 = (holdingRegisters[0] & 0x0100) >> 8
         di10 = (holdingRegisters[0] & 0x0200) >> 9
-        print (di9, di10)
-        #click(1)
+        if(di9 > 0 or di10 > 0):
+            print (di9, di10)
+            #click(1)
     else:
-        print (ii)
+        pass #print (ii)
         
 def moveMotor(unit, howmany):
     '''
@@ -60,6 +61,8 @@ def moveMotor(unit, howmany):
         modbusClient.WriteSingleRegister(2308, 0)
         modbusClient.WriteSingleRegister(2304, 0)
         '''
+        modbusClient.WriteSingleRegister(0x0901, 0, unit)
+        '''
         modbusClient.WriteSingleRegister(0x0901, 4, unit)
         modbusClient.WriteSingleRegister(0x0902, 1000, unit)
         modbusClient.WriteSingleRegister(0x0903, 200, unit)
@@ -76,6 +79,7 @@ def moveMotor(unit, howmany):
         #print (holdingRegisters)
         pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
         print (pos[unit])
+        '''
     else:
         print ("something wrong")
     '''
@@ -148,7 +152,7 @@ modbusClient = ModbusClient('/dev/ttyS26') #modbusClient = ModbusClient('127.0.0
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
-modbusClient.Baudrate = 9600
+modbusClient.Baudrate = 115200
 modbusClient.Stopbits = Stopbits.one
 modbusClient.Connect()
 
@@ -181,10 +185,13 @@ server.addMsgHandler( "/user/1", user_callback )
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
     
-while True:
+while False:
     for ii in range(1,33):
         readInput(ii)
         #time.sleep(0.001)
 
+moveMotor(1, 0)
+
 modbusClient.close()
+sock.close()
 server.close()
