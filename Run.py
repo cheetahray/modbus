@@ -87,6 +87,28 @@ def moveMotor(unit, howmany):
     modbusClient.WriteMultipleRegisters(0, ConvertFloatToTwoRegisters(3.141517))
     '''
 
+def JogMotor(unit, JogWhat):
+    
+    modbusClient.UnitIdentifier = unit
+    holdingRegisters = modbusClient.ReadHoldingRegisters(0x0900, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    print (holdingRegisters)
+
+    if holdingRegisters[0] == 0x0ff0:
+        #modbusClient.WriteSingleRegister(0x0901, 0, unit)
+        
+        modbusClient.WriteSingleRegister(0x0901, 3, unit)
+        modbusClient.WriteSingleRegister(0x0902, 1000, unit)
+        modbusClient.WriteSingleRegister(0x0903, 20, unit)
+        #print ("{:04x}".format(abs(howmany) >> 16))
+        modbusClient.WriteSingleRegister(0x0904, JogWhat, unit)
+        holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+        #print (holdingRegisters)
+        pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
+        print (pos[unit])
+    
+    else:
+        print ("something wrong")
+    
 def handler(socket,fortuple):
     while True:
         try:
@@ -182,6 +204,10 @@ server.handle_timeout = types.MethodType(handle_timeout, server)
 
 server.addMsgHandler( "/user/1", user_callback )
 
+JogDown = 1
+JogUp = 2
+JogStop = 0
+
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
     
@@ -190,10 +216,15 @@ while True:
     for ii in range(1,33):
         readInput(ii)
     '''
+    '''
     moveMotor(1, 200000)
     time.sleep(1)
     moveMotor(1, -200000)
     time.sleep(1)
+    '''
+    JogMotor(1,JogUp)
+    time.sleep(1)
+    JogMotor(1,JogStop)
 
 modbusClient.close()
 sock.close()
