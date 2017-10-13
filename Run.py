@@ -66,9 +66,9 @@ def moveMotor(unit, howmany):
         modbusClient.WriteSingleRegister(0x0901, 4, unit)
         modbusClient.WriteSingleRegister(0x0902, 1000, unit)
         modbusClient.WriteSingleRegister(0x0903, 200, unit)
-        #print ("{:04x}".format(pos&0xFFFF))
+        #print ("{:04x}".format(abs(howmany)&0xFFFF))
         modbusClient.WriteSingleRegister(0x0905, abs(howmany) & 0xFFFF, unit)
-        #print ("{:04x}".format(pos >> 16))
+        #print ("{:04x}".format(abs(howmany) >> 16))
         modbusClient.WriteSingleRegister(0x0906, abs(howmany) >> 16, unit)
         if(howmany > 0):
             modbusClient.WriteSingleRegister(0x0907, 1, unit)
