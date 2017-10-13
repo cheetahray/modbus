@@ -63,9 +63,6 @@ def moveMotor(unit, howmany):
         '''
         #modbusClient.WriteSingleRegister(0x0901, 0, unit)
         
-        modbusClient.WriteSingleRegister(0x0901, 4, unit)
-        modbusClient.WriteSingleRegister(0x0902, 1000, unit)
-        modbusClient.WriteSingleRegister(0x0903, 200, unit)
         #print ("{:04x}".format(abs(howmany)&0xFFFF))
         modbusClient.WriteSingleRegister(0x0905, abs(howmany) & 0xFFFF, unit)
         #print ("{:04x}".format(abs(howmany) >> 16))
@@ -182,6 +179,11 @@ server.handle_timeout = types.MethodType(handle_timeout, server)
 
 server.addMsgHandler( "/user/1", user_callback )
 
+for ii in range(1,33):
+    modbusClient.WriteSingleRegister(0x0901, 4, ii)
+    modbusClient.WriteSingleRegister(0x0902, 1000, ii)
+    modbusClient.WriteSingleRegister(0x0903, 200, ii)
+        
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
     
@@ -190,7 +192,7 @@ while True:
     for ii in range(1,33):
         readInput(ii)
     '''
-    moveMotor(1, 100000)
+    moveMotor(1, -100000)
     time.sleep(1)
 
 modbusClient.close()
