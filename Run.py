@@ -108,7 +108,10 @@ def JogMotor(unit, JogWhat):
     
     else:
         print ("something wrong")
-    
+
+def setZero(unit):
+    modbusClient.WriteSingleRegister(0x020B, 0x2223, unit)
+        
 def handler(socket,fortuple):
     while True:
         try:
@@ -211,7 +214,7 @@ JogStop = 0
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
     
-while True:
+while False:
     '''
     for ii in range(1,33):
         readInput(ii)
@@ -225,6 +228,8 @@ while True:
     JogMotor(1,JogUp)
     time.sleep(1)
     JogMotor(1,JogStop)
+
+setZero(1)
 
 modbusClient.close()
 sock.close()
