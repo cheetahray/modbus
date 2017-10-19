@@ -34,59 +34,14 @@ def readInput(unit):
         pass #print (ii)
         
 def moveMotor(unit, howmany):
-    '''
-    discreteInputs = modbusClient.ReadDiscreteInputs(0, 8)
-    print (discreteInputs)
-    '''
-    modbusClient.UnitIdentifier = unit
-    holdingRegisters = modbusClient.ReadHoldingRegisters(0x0900, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-    print (holdingRegisters)
-
-    '''
-    inputRegisters = modbusClient.ReadInputRegisters(2304, 1)
-    print (inputRegisters)
-    '''
-    '''
-    coils = modbusClient.ReadCoils(0, 8)
-    print (coils)
-    modbusClient.WriteSingleCoil(0, True)
-    '''
-    if holdingRegisters[0] == 0x0ff0:
-        '''
-        modbusClient.WriteSingleRegister(2305, 3)
-        modbusClient.WriteSingleRegister(2306, 200)
-        modbusClient.WriteSingleRegister(2307, 300)
-        modbusClient.WriteSingleRegister(2308, 2)
-        time.sleep(2)
-        modbusClient.WriteSingleRegister(2308, 0)
-        modbusClient.WriteSingleRegister(2304, 0)
-        '''
-        #modbusClient.WriteSingleRegister(0x0901, 0, unit)
-        
-        modbusClient.WriteSingleRegister(0x0901, 4, unit)
-        modbusClient.WriteSingleRegister(0x0902, 1000, unit)
-        modbusClient.WriteSingleRegister(0x0903, 200, unit)
-        #print ("{:04x}".format(abs(howmany)&0xFFFF))
-        modbusClient.WriteSingleRegister(0x0905, abs(howmany) & 0xFFFF, unit)
-        #print ("{:04x}".format(abs(howmany) >> 16))
-        modbusClient.WriteSingleRegister(0x0906, abs(howmany) >> 16, unit)
-        if(howmany > 0):
-            modbusClient.WriteSingleRegister(0x0907, 1, unit)
-        else:
-            modbusClient.WriteSingleRegister(0x0907, 2, unit)
-        #modbusClient.WriteSingleRegister(0x0901, 0)
-        holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-        #print (holdingRegisters)
-        pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
-        print (pos[unit])
     
-    else:
-        print ("something wrong")
-    '''
-    modbusClient.WriteMultipleCoils(0, [True,True,True,True,True,False,True])
-    modbusClient.WriteMultipleRegisters(0, ConvertFloatToTwoRegisters(3.141517))
-    '''
-
+    modbusClient.UnitIdentifier = unit
+    
+    #modbusClient.WriteSingleRegister(0x0901, 0, unit)
+    modbusClient.UnitIdentifier = unit
+    modbusClient.WriteSingleRegister(0x0704, howmany, unit)
+    modbusClient.WriteSingleRegister(0x08a2, 1, unit)
+    
 def JogMotor(unit, JogWhat):
     
     modbusClient.UnitIdentifier = unit
@@ -111,8 +66,7 @@ def JogMotor(unit, JogWhat):
 
 def setZero(unit):
     modbusClient.UnitIdentifier = unit
-    holdingRegisters = modbusClient.ReadHoldingRegisters(0x0300, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-    print (holdingRegisters)
+    modbusClient.WriteSingleRegister(0x0703, 2, unit)
     
 def handler(socket,fortuple):
     while True:
@@ -216,20 +170,19 @@ JogStop = 0
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
 
-#JogMotor(1,JogUp)    
-#setZero(1)
+#JogMotor(1,JogUp)
+for ii in range(1,33):
+    setZero(ii)
         
-while False:
-    
+while True:
+    '''
     for ii in range(1,33):
         readInput(ii)
-    
     '''
-    moveMotor(1, 200000)
+    moveMotor(1, 10000)
     time.sleep(1)
-    moveMotor(1, -200000)
+    moveMotor(1, -10000)
     time.sleep(1)
-    '''
     
 modbusClient.close()
 sock.close()
