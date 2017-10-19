@@ -486,7 +486,7 @@ class ModbusClient(object):
                 raise Exceptions.QuantityInvalidException("quantity invalid");
             if ((data[1] == 0x86) & (data[2] == 0x04)):
                 raise Exceptions.ModbusException("error reading");
-            if data[0] == unit:
+            if ord(data[0]) == unit:
                 return True 
             else:
                 return False   

@@ -110,8 +110,10 @@ def JogMotor(unit, JogWhat):
         print ("something wrong")
 
 def setZero(unit):
-    modbusClient.WriteSingleRegister(0x020B, 0x2223, unit)
-        
+    modbusClient.UnitIdentifier = unit
+    holdingRegisters = modbusClient.ReadHoldingRegisters(0x0300, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    print (holdingRegisters)
+    
 def handler(socket,fortuple):
     while True:
         try:
@@ -213,24 +215,22 @@ JogStop = 0
 
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
-    
+
+#JogMotor(1,JogUp)    
+#setZero(1)
+        
 while False:
-    '''
+    
     for ii in range(1,33):
         readInput(ii)
-    '''
+    
     '''
     moveMotor(1, 200000)
     time.sleep(1)
     moveMotor(1, -200000)
     time.sleep(1)
     '''
-    JogMotor(1,JogUp)
-    time.sleep(1)
-    JogMotor(1,JogStop)
-
-setZero(1)
-
+    
 modbusClient.close()
 sock.close()
 server.close()
