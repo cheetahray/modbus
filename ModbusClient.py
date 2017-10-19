@@ -473,21 +473,23 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            #print (unit, functionCode, startingAddressMSB, startingAddressLSB, valueMSB, valueLSB, CrcLSB, CrcMSB)			
+            #print (unit, functionCode, startingAddressMSB, startingAddressLSB, valueMSB, valueLSB, CrcLSB, CrcMSB)            
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
-            print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]),ord(data[7]))
-            if ((data[1] == 0x86) & (data[2] == 0x01)):
-                raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
-            if ((data[1] == 0x86) & (data[2] == 0x02)):
-                raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
-            if ((data[1] == 0x86) & (data[2] == 0x03)):
-                raise Exceptions.QuantityInvalidException("quantity invalid");
-            if ((data[1] == 0x86) & (data[2] == 0x04)):
-                raise Exceptions.ModbusException("error reading");
-            if ord(data[0]) == unit:
-                return True 
+            if len(data) > 0:
+                if (data[1] == 0x86):
+                    if (data[2] == 0x01):
+                        raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
+                    elif (data[2] == 0x02):
+                        raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
+                    elif (data[2] == 0x03):
+                        raise Exceptions.QuantityInvalidException("quantity invalid");
+                    elif (data[2] == 0x04):
+                        raise Exceptions.ModbusException("error reading");
+                elif ord(data[0]) == unit:
+                    print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]),ord(data[7]))
+                    return True 
             else:
                 return False   
         else:
