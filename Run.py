@@ -114,6 +114,7 @@ def user_callback(path, tags, args, source):
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
     print ("Now do something with", args[0]) 
+    # moveMotor(1, -100000)
 
 # user script that's called by the game engine every frame
 def each_frame():
@@ -174,14 +175,8 @@ for unit in range(1,33):
     modbusClient.WriteSingleRegister(0x0703, 2, unit)
         
 while True:
-    '''
     for ii in range(1,33):
         readInput(ii)
-    '''
-    moveMotor(1, 100000)
-    time.sleep(1)
-    moveMotor(1, -100000)
-    time.sleep(1)
     
 modbusClient.close()
 sock.close()
