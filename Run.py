@@ -27,11 +27,11 @@ def readInput(unit):
     if(len(holdingRegisters)):
         di9 = (holdingRegisters[0] & 0x0100) >> 8
         di10 = (holdingRegisters[0] & 0x0200) >> 9
-        if(di9 > 0 or di10 > 0):
+        if(di9 == 0 or di10 == 0):
             print (di9, di10)
             #click(1)
-    else:
-        pass #print (ii)
+    #else:
+    #    print (ii)
         
 def moveMotor(unit, howmany):
     
@@ -113,9 +113,10 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    print ("Now do something with", args[0]) 
-    # moveMotor(1, -100000)
-
+    #print (args[0], args[1]) 
+    global func_list
+    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]) ) )
+	
 # user script that's called by the game engine every frame
 def each_frame():
     # simulate a "game engine"
@@ -125,10 +126,10 @@ def each_frame():
         # handle all pending requests then return
         if not server.timed_out:
             server.handle_request()
-
+'''
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 6666))
-
+'''
 modbusClient = ModbusClient('COM31') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
@@ -171,13 +172,18 @@ JogStop = 0
 thread.start_new_thread(each_frame,())
 
 #JogMotor(1,JogUp)
-for unit in range(1,33):    
-    modbusClient.WriteSingleRegister(0x0703, 2, unit)
+#for unit in range(1,33):    
+#    modbusClient.WriteSingleRegister(0x0703, 2, unit)
+func_list = []
         
 while True:
     for ii in range(1,33):
+        for jj in func_list:
+            jj()
+            func_list.pop(0)
         readInput(ii)
-    
+        time.sleep(0.015)
+		
 modbusClient.close()
 sock.close()
 server.close()

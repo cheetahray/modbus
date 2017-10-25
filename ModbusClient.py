@@ -273,7 +273,10 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
-            #print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]))
+            for ii in range(0,len(data)):
+                print ord(data[ii]),
+            if len(data) > 0:
+                print "read"
             myList = list()
             try:
                 if ((data[1] == 0x83) & (data[2] == 0x01)):
@@ -488,7 +491,10 @@ class ModbusClient(object):
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
                 elif ord(data[0]) == unit:
-                    print (ord(data[0]),ord(data[1]),ord(data[2]),ord(data[3]),ord(data[4]),ord(data[5]),ord(data[6]),ord(data[7]))
+                    for ii in range(0,len(data)):
+                        print ord(data[ii]),
+                    if len(data) > 0:
+                        print "write"
                     return True 
             else:
                 return False   
