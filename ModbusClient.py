@@ -68,7 +68,7 @@ class ModbusClient(object):
                 self.ser.parity = serial.PARITY_ODD
             elif self._parity == 2:               
                 self.ser.parity = serial.PARITY_NONE 
-            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.015, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
+            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.016, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
         print (self.ser)
         if (self.tcpClientSocket is not None):  
             self.tcpClientSocket.connect((self._ipAddress, self._port))
@@ -273,22 +273,26 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
+            '''
             for ii in range(0,len(data)):
                 print ord(data[ii]),
             if len(data) > 0:
                 print "read"
+            '''
             myList = list()
             try:
-                if ((data[1] == 0x83) & (data[2] == 0x01)):
-                    raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
-                if ((data[1] == 0x83) & (data[2] == 0x02)):
-                    raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
-                if ((data[1] == 0x83) & (data[2] == 0x03)):
-                    raise Exceptions.QuantityInvalidException("quantity invalid");
-                if ((data[1] == 0x83) & (data[2] == 0x04)):
-                    raise Exceptions.ModbusException("error reading");
-                for i in range(0, quantity):
-                    myList.append( ( ord( data[i*2+3] ) << 8 ) + ord( data[i*2+4] ) )            
+                if len(data) > 0:
+                    if (data[1] == 0x83): 
+                        if (data[2] == 0x01):
+                            raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
+                        elif (data[2] == 0x02):
+                            raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
+                        elif (data[2] == 0x03):
+                            raise Exceptions.QuantityInvalidException("quantity invalid");
+                        elif (data[2] == 0x04):
+                            raise Exceptions.ModbusException("error reading");
+                    for i in range(0, quantity):
+                        myList.append( ( ord( data[i*2+3] ) << 8 ) + ord( data[i*2+4] ) )            
             except IndexError:
                 pass
             return myList 
@@ -640,16 +644,18 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
-            if ((data[1] == 0x90) & (data[2] == 0x01)):
-                raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
-            if ((data[1] == 0x90) & (data[2] == 0x02)):
-                raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
-            if ((data[1] == 0x90) & (data[2] == 0x03)):
-                raise Exceptions.QuantityInvalidException("quantity invalid");
-            if ((data[1] == 0x90) & (data[2] == 0x04)):
-                raise Exceptions.ModbusException("error reading");
-            if data[1] == unit:
-                return True 
+            if len(data) > 0:            
+                if (data[1] == 0x90):
+                    if (data[2] == 0x01):
+                        raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
+                    elif (data[2] == 0x02):
+                        raise Exceptions.StartingAddressInvalidException("Starting address invalid or starting address + quantity invalid");
+                    elif (data[2] == 0x03):
+                        raise Exceptions.QuantityInvalidException("quantity invalid");
+                    elif (data[2] == 0x04):
+                        raise Exceptions.ModbusException("error reading");
+                if data[1] == unit:
+                    return True 
             else:
                 return False     
         else:

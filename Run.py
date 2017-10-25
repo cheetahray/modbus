@@ -27,11 +27,11 @@ def readInput(unit):
     if(len(holdingRegisters)):
         di9 = (holdingRegisters[0] & 0x0100) >> 8
         di10 = (holdingRegisters[0] & 0x0200) >> 9
-        if(di9 == 0 or di10 == 0):
+        if(di9 > 0 or di10 > 0):
             print (di9, di10)
             #click(1)
-    #else:
-    #    print (ii)
+    else:
+        print (ii)
         
 def moveMotor(unit, howmany):
     
@@ -182,7 +182,7 @@ while True:
             jj()
             func_list.pop(0)
         readInput(ii)
-        time.sleep(0.015)
+        time.sleep(0.016)
 		
 modbusClient.close()
 sock.close()
