@@ -11,38 +11,30 @@ import thread
 import sys
 import types
 
-def click(msg):
-    global cc
-    tracknum = "34"
-    oscmsg = OSC.OSCMessage()
-    oscstr = "%s" % ("/track" + tracknum + "/connect") 
-    print (oscstr)
-    oscmsg.setAddress(oscstr)
-    oscmsg.append(1)
-    cc.send(oscmsg)
-    
-def readInput(unit):
-    modbusClient.UnitIdentifier = unit
-    holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-    if(len(holdingRegisters)):
-        di9 = (holdingRegisters[0] & 0x0100) >> 8
-        di10 = (holdingRegisters[0] & 0x0200) >> 9
-        if(di9 > 0 or di10 > 0):
-            print (di9, di10)
-            #click(1)
-    else:
-        print (ii)
-        
-def moveMotor(unit, howmany):
+def goZero(unit):
     
     modbusClient.UnitIdentifier = unit
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
+    modbusClient.WriteMultipleRegisters(0x0700, [0x0012, 0x0000], unit)
+    modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
+    #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    #print (holdingRegisters)
+    modbusClient.WriteSingleRegister(0x08A0, 1, unit)
+    #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    #print (holdingRegisters)
+
+def moveMotor(unit, howmany, speed):
+    
+    modbusClient.UnitIdentifier = unit
+    #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    #print (holdingRegisters)
+    modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0001], unit)
     modbusClient.WriteMultipleRegisters(0x0706, [howmany & 0xFFFF, howmany >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    modbusClient.WriteSingleRegister(0x08a2, 1, unit)
-    #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08a2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    modbusClient.WriteSingleRegister(0x08A2, 1, unit)
+    #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     
 def JogMotor(unit, JogWhat):
@@ -53,7 +45,7 @@ def JogMotor(unit, JogWhat):
 
     if holdingRegisters[0] == 0x0ff0:
         #modbusClient.WriteSingleRegister(0x0901, 0, unit)
-        
+
         modbusClient.WriteSingleRegister(0x0901, 3, unit)
         modbusClient.WriteSingleRegister(0x0902, 1000, unit)
         modbusClient.WriteSingleRegister(0x0903, 20, unit)
@@ -115,7 +107,7 @@ def user_callback(path, tags, args, source):
     # source is where the message came from (in case you need to reply)
     #print (args[0], args[1]) 
     global func_list
-    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]) ) )
+    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
 	
 # user script that's called by the game engine every frame
 def each_frame():
@@ -126,22 +118,12 @@ def each_frame():
         # handle all pending requests then return
         if not server.timed_out:
             server.handle_request()
-'''
-cc = OSC.OSCClient()
-cc.connect(('127.0.0.1', 6666))
-'''
-modbusClient = ModbusClient('COM31') #modbusClient = ModbusClient('127.0.0.1', 502)
-#modbusClient.Parity = Parity.odd
-modbusClient.Parity = Parity.even
-modbusClient.UnitIdentifier = 1
-modbusClient.Baudrate = 115200
-modbusClient.Stopbits = Stopbits.one
-modbusClient.Connect()
 
-pos = [0] * 25
+motornum = 25
+pos = [0] * motornum
 artdmx = [0] * 256
 
-dividee = (950000000/256)
+dividee = (1000000000/256)
     
 for ii in range(0,256):
     artdmx[ii] = int(ii * dividee)
@@ -151,7 +133,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.bind(("0.0.0.0", 6454))
 
 server = OSC.OSCServer( ("localhost", 7110) )
-server.timeout = 0.001
+server.timeout = 0 #0.001
 
 # this method of reporting timeouts only works by convention
 # that before calling handle_request() field .timed_out is 
@@ -162,27 +144,20 @@ def handle_timeout(self):
 # funny python's way to add a method to an instance of a class
 server.handle_timeout = types.MethodType(handle_timeout, server)
 
-server.addMsgHandler( "/user/1", user_callback )
-
-JogDown = 1
-JogUp = 2
-JogStop = 0
+server.addMsgHandler( "/motor", user_callback )
 
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
 
-#JogMotor(1,JogUp)
-#for unit in range(1,33):    
-#    modbusClient.WriteSingleRegister(0x0703, 2, unit)
 func_list = []
+
+for jj in range(0, motornum):
+    goZero(jj+1)
         
-while True:
-    for ii in range(1,33):
-        for jj in func_list:
-            jj()
-            func_list.pop(0)
-        readInput(ii)
-        time.sleep(0.016)
+while False:
+    for jj in func_list:
+        jj()
+        func_list.pop(0)
 		
 modbusClient.close()
 sock.close()
