@@ -34,6 +34,7 @@ class ModbusClient(object):
         self.ser = None
         self.tcpClientSocket = None
         self.__connected = False
+        self.timeout = 0;
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
@@ -68,7 +69,7 @@ class ModbusClient(object):
                 self.ser.parity = serial.PARITY_ODD
             elif self._parity == 2:               
                 self.ser.parity = serial.PARITY_NONE 
-            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0.016, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
+            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=self.timeout, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
         print (self.ser)
         if (self.tcpClientSocket is not None):  
             self.tcpClientSocket.connect((self._ipAddress, self._port))
