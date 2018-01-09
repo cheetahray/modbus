@@ -11,7 +11,7 @@ import thread
 import sys
 import types
 
-def click(msg, X, Y):
+def click(X, Y):
     global cc
     oscmsg = OSC.OSCMessage()
     oscstr = "/Get"
@@ -26,11 +26,12 @@ def readInput(unit):
     modbusClient.UnitIdentifier = unit
     holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     if(len(holdingRegisters)):
-        d8 = (holdingRegisters[0] & 0x0080)
+        di8 = (holdingRegisters[0] & 0x0080)
         #di9 = (holdingRegisters[0] & 0x0100) >> 8
         #di10 = (holdingRegisters[0] & 0x0200) >> 9
         if(di8 == 0):
-            #click(1)
+            print("Fa")
+            click(3,2)
             '''
             holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
             #print (holdingRegisters)
@@ -38,7 +39,8 @@ def readInput(unit):
             print (pos[unit])
             '''
     else:
-        print (ii)
+        pass
+        #print (ii)
 
 def goZero(unit):
     
@@ -155,9 +157,9 @@ def each_frame():
             server.handle_request()
 
 cc = OSC.OSCClient()
-cc.connect(('127.0.0.1', 6666))
+cc.connect(('127.0.0.1', 7110))
 
-modbusClient = ModbusClient('COM31') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -167,8 +169,8 @@ modbusClient.timeout = 0.016
 modbusClient.Connect()
 motornum = 25
 pos = [0] * motornum
-artdmx = [0] * motornum
 howmanylevel = 128
+artdmx = [0] * howmanylevel
 dividee = (1000000000/howmanylevel)
     
 for ii in range(0,howmanylevel):
@@ -178,7 +180,7 @@ for ii in range(0,howmanylevel):
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.bind(("0.0.0.0", 6454))
 
-server = OSC.OSCServer( ("localhost", 7110) )
+server = OSC.OSCServer( ("0.0.0.0", 7110) )
 server.timeout = 0.001
 
 # this method of reporting timeouts only works by convention
@@ -190,7 +192,7 @@ def handle_timeout(self):
 # funny python's way to add a method to an instance of a class
 server.handle_timeout = types.MethodType(handle_timeout, server)
 
-server.addMsgHandler( "/user/1", user_callback )
+server.addMsgHandler( "/motor", user_callback )
 
 #thread.start_new_thread(handler,(sock,0))
 thread.start_new_thread(each_frame,())
@@ -206,7 +208,7 @@ while True:
         func_list.pop(0)
     for ii in range(0, motornum):
         readInput(ii+1)
-        time.sleep(modbusClient.timeout)
+        #time.sleep(modbusClient.timeout)
 		
 modbusClient.close()
 sock.close()
