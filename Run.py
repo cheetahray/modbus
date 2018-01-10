@@ -157,7 +157,7 @@ def each_frame():
             server.handle_request()
 
 cc = OSC.OSCClient()
-cc.connect(('127.0.0.1', 7110))
+cc.connect(('192.168.11.102', 4808))
 
 modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
@@ -180,7 +180,7 @@ for ii in range(0,howmanylevel):
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.bind(("0.0.0.0", 6454))
 
-server = OSC.OSCServer( ("0.0.0.0", 7110) )
+server = OSC.OSCServer( ("0.0.0.0", 7730) )
 server.timeout = 0.001
 
 # this method of reporting timeouts only works by convention
