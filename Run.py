@@ -50,6 +50,7 @@ def goZero(unit):
     #modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
+    modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0001], unit)
     modbusClient.WriteSingleRegister(0x08A2, 0, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
@@ -59,13 +60,16 @@ def moveMotor(unit, howmany, speed):
     modbusClient.UnitIdentifier = unit
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
+    '''
     if 1 == speed:
         speed = 2
     elif 2 == speed:
         speed = 1
     if speed <= 7 and speed >= 1:
         speed = speed - 1            
-        modbusClient.WriteMultipleRegisters(0x0704, [0x0012, speed], unit)
+        modbusClient.WriteSingleRegister(0x0705, speed, unit) #modbusClient.WriteMultipleRegisters(0x0704, [0x0012, speed], unit)
+    '''
+    modbusClient.WriteSingleRegister(0x0840, speed, unit)
     modbusClient.WriteMultipleRegisters(0x0706, [howmany & 0xFFFF, howmany >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
@@ -141,9 +145,9 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    #print (args[0], args[1]) 
+    print (args[0], args[1], arg[2]) 
     global func_list
-    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
+    #func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
 	
 # user script that's called by the game engine every frame
 def each_frame():
