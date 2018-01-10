@@ -30,8 +30,7 @@ def readInput(unit):
         #di9 = (holdingRegisters[0] & 0x0100) >> 8
         #di10 = (holdingRegisters[0] & 0x0200) >> 9
         if(di8 == 0):
-            print("Fa")
-            click(3,2)
+            click(unit,pos[unit])
             '''
             holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
             #print (holdingRegisters)
