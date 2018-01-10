@@ -70,9 +70,13 @@ def moveMotor(unit, howmany, speed):
         speed = speed - 1            
         modbusClient.WriteSingleRegister(0x0705, speed, unit) #modbusClient.WriteMultipleRegisters(0x0704, [0x0012, speed], unit)
     '''
+    if 1 > speed:
+        speed = 1
+    elif 1000 < speed:
+        speed = 1000
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
     #print artdmx[howmany]
-    modbusClient.WriteMultipleRegisters(0x0706, [artdmx[howmany] & 0xFFFF, artdmx[howmany] >> 16], unit)
+    modbusClient.WriteMultipleRegisters(0x0706, [artdmx[howmany-1] & 0xFFFF, artdmx[howmany-1] >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     modbusClient.WriteSingleRegister(0x08A2, 1, unit)
