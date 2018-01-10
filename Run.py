@@ -50,7 +50,7 @@ def goZero(unit):
     #modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0001], unit)
+    modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0000], unit)
     modbusClient.WriteSingleRegister(0x08A2, 0, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
@@ -70,7 +70,8 @@ def moveMotor(unit, howmany, speed):
         modbusClient.WriteSingleRegister(0x0705, speed, unit) #modbusClient.WriteMultipleRegisters(0x0704, [0x0012, speed], unit)
     '''
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
-    modbusClient.WriteMultipleRegisters(0x0706, [howmany & 0xFFFF, howmany >> 16], unit)
+    #print artdmx[howmany]
+    modbusClient.WriteMultipleRegisters(0x0706, [artdmx[howmany] & 0xFFFF, artdmx[howmany] >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     modbusClient.WriteSingleRegister(0x08A2, 1, unit)
@@ -145,9 +146,9 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    print (args[0], args[1], arg[2]) 
+    #print (args[0], args[1], args[2]) 
     global func_list
-    #func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
+    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
 	
 # user script that's called by the game engine every frame
 def each_frame():
@@ -174,10 +175,10 @@ motornum = 25
 pos = [0] * motornum
 howmanylevel = 128
 artdmx = [0] * howmanylevel
-dividee = (1000000000/howmanylevel)
+dividee = (100000000/howmanylevel)
     
 for ii in range(0,howmanylevel):
-    artdmx[ii] = int(ii * dividee)
+    artdmx[ii] = int(ii * dividee * -1)
     print (artdmx[ii])
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
