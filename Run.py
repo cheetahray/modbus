@@ -50,6 +50,7 @@ def goZero(unit):
     #modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
+    modbusClient.WriteSingleRegister(0x0840, 25, unit)
     modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0000], unit)
     modbusClient.WriteSingleRegister(0x08A2, 0, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
