@@ -25,6 +25,7 @@ def click(X, Y):
 def readInput(unit):
     modbusClient.UnitIdentifier = unit
     holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+    print (holdingRegisters)
     if(len(holdingRegisters)):
         di8 = (holdingRegisters[0] & 0x0080)
         #di9 = (holdingRegisters[0] & 0x0100) >> 8

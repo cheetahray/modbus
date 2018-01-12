@@ -270,16 +270,9 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            #print (unit, functionCode, startingAddressMSB, startingAddressLSB, quatityMSB, quatityLSB, CrcLSB, CrcMSB)
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
-            '''
-            for ii in range(0,len(data)):
-                print ord(data[ii]),
-            if len(data) > 0:
-                print "read"
-            '''
             myList = list()
             try:
                 if len(data) > 0:
@@ -349,7 +342,6 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            print (startingAddressMSB, startingAddressLSB, quatityMSB, quatityLSB, CrcLSB, CrcMSB)
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
@@ -481,7 +473,6 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            #print (unit, functionCode, startingAddressMSB, startingAddressLSB, valueMSB, valueLSB, CrcLSB, CrcMSB)            
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
@@ -495,7 +486,7 @@ class ModbusClient(object):
                         raise Exceptions.QuantityInvalidException("quantity invalid");
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
-                elif ord(data[0]) == unit:
+                elif False: #ord(data[0]) == unit:
                     for ii in range(0,len(data)):
                         print ord(data[ii]),
                     if len(data) > 0:
