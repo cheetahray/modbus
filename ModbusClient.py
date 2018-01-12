@@ -285,6 +285,7 @@ class ModbusClient(object):
                             raise Exceptions.QuantityInvalidException("quantity invalid");
                         elif (data[2] == 0x04):
                             raise Exceptions.ModbusException("error reading");
+                    print data
                     for i in range(0, quantity):
                         myList.append( ( ord( data[i*2+3] ) << 8 ) + ord( data[i*2+4] ) )            
             except IndexError:
