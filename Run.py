@@ -26,11 +26,13 @@ def readInput(unit):
     modbusClient.UnitIdentifier = unit
     holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     if(len(holdingRegisters)):
-        print (holdingRegisters)
+        #print (holdingRegisters)
         di8 = (holdingRegisters[0] & 0x0080)
         #di9 = (holdingRegisters[0] & 0x0100) >> 8
         #di10 = (holdingRegisters[0] & 0x0200) >> 9
         if(di8 == 0):
+            #if(holdingRegisters[0] < 961 and holdingRegisters[0] > 0):		
+            #    click(holdingRegisters[1],pos[holdingRegisters[1]])
             click(unit,pos[unit])
             '''
             holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
@@ -75,6 +77,7 @@ def moveMotor(unit, howmany, speed):
         speed = 1
     elif 1000 < speed:
         speed = 1000
+    #modbusClient.Clear()
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
     #print artdmx[howmany]
     modbusClient.WriteMultipleRegisters(0x0706, [artdmx[howmany-1] & 0xFFFF, artdmx[howmany-1] >> 16], unit)
@@ -83,7 +86,8 @@ def moveMotor(unit, howmany, speed):
     modbusClient.WriteSingleRegister(0x08A2, 1, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    
+    pos[unit] = howmany
+
 def JogMotor(unit, JogWhat):
     
     modbusClient.UnitIdentifier = unit
@@ -152,9 +156,9 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    #print (args[0], args[1], args[2]) 
+    print (args[0], args[1], args[2]) 
     global func_list
-    func_list.append( lambda : moveMotor( int(args[0]), int(args[1]), int(args[2]) ) )
+    func_list.append( lambda : moveMotor( args[0], args[1], args[2] ) )
 	
 # user script that's called by the game engine every frame
 def each_frame():
@@ -167,7 +171,7 @@ def each_frame():
             server.handle_request()
 
 cc = OSC.OSCClient()
-cc.connect(('192.168.11.102', 4808))
+cc.connect(('127.0.0.1', 7110))
 
 modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
@@ -177,8 +181,8 @@ modbusClient.Baudrate = 115200
 modbusClient.Stopbits = Stopbits.one
 modbusClient.timeout = 0.016
 modbusClient.Connect()
-motornum = 25
-pos = [0] * motornum
+motornum = 13
+pos = [0] * motornum * 2
 howmanylevel = 128
 artdmx = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
@@ -211,7 +215,7 @@ func_list = []
 
 for jj in range(0, motornum):
     goZero(jj+1)
-                
+
 while True:
     for jj in func_list:
         jj()
