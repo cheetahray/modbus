@@ -62,6 +62,11 @@ def goZero(unit):
 def moveMotor(unit, howmany, speed):
 
     modbusClient.UnitIdentifier = unit
+    motordistance = 0
+    if unit == 25:
+        motordistance = artdmx[howmany-1] * -1
+    else:
+        motordistance = artdmx[howmany-1]
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     '''
@@ -80,7 +85,7 @@ def moveMotor(unit, howmany, speed):
     #modbusClient.Clear()
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
     #print artdmx[howmany]
-    modbusClient.WriteMultipleRegisters(0x0706, [artdmx[howmany-1] & 0xFFFF, artdmx[howmany-1] >> 16], unit)
+    modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     modbusClient.WriteSingleRegister(0x08A2, 1, unit)
@@ -173,7 +178,7 @@ def each_frame():
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 7110))
 
-modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM31') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -182,13 +187,15 @@ modbusClient.Stopbits = Stopbits.one
 modbusClient.timeout = 0.016
 modbusClient.Connect()
 motornum = 13
-pos = [0] * motornum * 2
+pos = [128] * motornum * 2
 howmanylevel = 128
 artdmx = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
     
 for ii in range(0,howmanylevel):
-    artdmx[ii] = int(ii * dividee * -1)
+    artdmx[howmanylevel-ii-1] = int(ii * dividee)
+
+for ii in range(0,howmanylevel):
     print (artdmx[ii])
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -213,14 +220,16 @@ thread.start_new_thread(each_frame,())
 
 func_list = []
 
-for jj in range(0, motornum):
+#for jj in range(0, motornum):
+for jj in range(motornum, 25):
     goZero(jj+1)
 
 while True:
     for jj in func_list:
         jj()
         func_list.pop(0)
-    for ii in range(0, motornum):
+    #for ii in range(0, motornum):
+    for ii in range(motornum, 25):
         readInput(ii+1)
         #time.sleep(modbusClient.timeout)
 		
