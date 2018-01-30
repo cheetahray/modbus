@@ -222,8 +222,8 @@ func_list = []
 
 #for jj in range(0, motornum):
 for jj in range(motornum, 25):
-    goZero(jj+1)
-
+    pass #goZero(jj+1)
+moveMotor( 1, 64, 25 )
 while True:
     for jj in func_list:
         jj()
