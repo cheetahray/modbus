@@ -480,7 +480,7 @@ class ModbusClient(object):
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
-            if len(data) > 0:
+            if len(data) > 1:
                 if (data[1] == 0x86):
                     if (data[2] == 0x01):
                         raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");

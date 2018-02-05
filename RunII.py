@@ -179,7 +179,7 @@ def each_frame():
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 7110))
 
-modbusClient = ModbusClient('COM6') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -200,9 +200,9 @@ for ii in range(0,howmanylevel):
     print (artdmx[ii])
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-sock.bind(("0.0.0.0", 6454))
+sock.bind(("0.0.0.0", 6455))
 
-server = OSC.OSCServer( ("0.0.0.0", 7730) )
+server = OSC.OSCServer( ("0.0.0.0", 4808) )
 server.timeout = 0.001
 
 # this method of reporting timeouts only works by convention
@@ -221,16 +221,17 @@ thread.start_new_thread(each_frame,())
 
 func_list = []
 
-for jj in range(1, motornum):
-#for jj in range(motornum, 25):
+#for jj in range(1, motornum):
+for jj in range(motornum, 25):
+#for jj in range(1, 2):
     goZero(jj)
 #moveMotor( 1, 64, 25 )
 while True:
     for jj in func_list:
         jj()
         func_list.pop(0)
-    for ii in range(1, motornum):
-    #for ii in range(motornum, 25):
+    #for ii in range(1, motornum):
+    for ii in range(motornum, 25):
         readInput(ii)
         #time.sleep(modbusClient.timeout)
 		
