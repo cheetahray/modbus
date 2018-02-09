@@ -35,6 +35,7 @@ class ModbusClient(object):
         self.tcpClientSocket = None
         self.__connected = False
         self.timeout = 0;
+        self.writeTimeout = 0.015;
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
@@ -50,9 +51,6 @@ class ModbusClient(object):
             self._ipAddress = params[0]
             self._port = params[1]
             
-    def Clear(self):
-        self.ser.flushInput();
-        self.ser.flushOutput();
             
     def Connect(self):
         """
@@ -273,6 +271,7 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
+            #self.printFAE("CMD03H req", data)
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
             data = self.ser.read(bytesToRead)
@@ -288,9 +287,10 @@ class ModbusClient(object):
                             raise Exceptions.QuantityInvalidException("quantity invalid");
                         elif (data[2] == 0x04):
                             raise Exceptions.ModbusException("error reading");
+                    #self.printFAE("CMD03H res", data)
                     for i in range(0, quantity):
                         myList.append( ( ord( data[i*2+3] ) << 8 ) + ord( data[i*2+4] ) )            
-                    #myList.append( ord( data[0] ) )
+                    myList.append( ord( data[0] ) )
             except IndexError:
                 pass
             return myList 
@@ -477,9 +477,12 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
+            self.printFAE("CMD06H req", data)
+            self.ser.timeout = self.writeTimeout
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
+            self.ser.timeout = self.timeout
             if len(data) > 1:
                 if (data[1] == 0x86):
                     if (data[2] == 0x01):
@@ -490,11 +493,8 @@ class ModbusClient(object):
                         raise Exceptions.QuantityInvalidException("quantity invalid");
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
-                elif False: #ord(data[0]) == unit:
-                    for ii in range(0,len(data)):
-                        print ord(data[ii]),
-                    if len(data) > 0:
-                        print "write"
+                elif ord(data[0]) == unit:
+                    self.printFAE("CMD06H res", data)
                     return True 
             else:
                 return False   
@@ -637,9 +637,12 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data.append(CrcLSB)
             data.append(CrcMSB)
+            self.printFAE("CMD10H req", data)
+            self.ser.timeout = self.writeTimeout
             self.ser.write(data)
             bytesToRead = 8
             data = self.ser.read(bytesToRead)
+            self.ser.timeout = self.timeout
             if len(data) > 0:            
                 if (data[1] == 0x90):
                     if (data[2] == 0x01):
@@ -650,7 +653,8 @@ class ModbusClient(object):
                         raise Exceptions.QuantityInvalidException("quantity invalid");
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
-                if data[1] == unit:
+                if ord(data[0]) == unit:
+                    self.printFAE("CMD10H res", data)
                     return True 
             else:
                 return False     
@@ -689,7 +693,20 @@ class ModbusClient(object):
                 else:
                     crc = crc >> 1                 
         return crc
-   
+
+    def clear(self):
+        self.ser.flushOutput()
+
+    def printFAE(self, whoami, data):
+        print whoami,
+        for ii in range(0, len(data)):
+            if whoami[-3:] == "res":
+               print hex(ord(data[ii])),
+            elif whoami[-3:] == "req":   
+               print hex(data[ii]),
+               
+        print "" 
+
     @property
     def Port(self):
         """

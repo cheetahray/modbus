@@ -7,33 +7,35 @@ Created on 12.09.2016
 from ModbusClient import *
 import time
 import OSC
-import thread
+import _thread
 import sys
 import types
-
+count = 0
 def click(X, Y):
     global cc
+    global count
     oscmsg = OSC.OSCMessage()
     oscstr = "/Get"
     oscmsg.setAddress(oscstr)
-    oscstr = "%s %d %d" % (oscstr, X, Y) 
-    print (oscstr)
+    oscstr = "%s %d %d" % (oscstr, X, count) 
     oscmsg.append(X)
-    oscmsg.append(Y)
+    oscmsg.append(count)
+    print oscmsg
     cc.send(oscmsg)
+    count+=1
     
 def readInput(unit):
     modbusClient.UnitIdentifier = unit
     holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     if(len(holdingRegisters)):
-        #print (holdingRegisters)
+        print (unit, holdingRegisters)
         di8 = (holdingRegisters[0] & 0x0080)
         #di9 = (holdingRegisters[0] & 0x0100) >> 8
         #di10 = (holdingRegisters[0] & 0x0200) >> 9
         if(di8 == 0):
-            #if(holdingRegisters[0] < 961 and holdingRegisters[0] > 0):		
-            #    click(holdingRegisters[1],pos[holdingRegisters[1]])
-            click(unit,pos[unit])
+            if( holdingRegisters[1] < (motornum << 1) ):		
+                click(holdingRegisters[1],pos[holdingRegisters[1]])
+            #click(unit,pos[unit])
             '''
             holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
             #print (holdingRegisters)
@@ -60,7 +62,7 @@ def goZero(unit):
     #print (holdingRegisters)
         
 def moveMotor(unit, howmany, speed):
-
+    
     modbusClient.UnitIdentifier = unit
     motordistance = 0
     if unit == 25: #speed % 2 == 0:
@@ -69,7 +71,7 @@ def moveMotor(unit, howmany, speed):
         motordistance = artdmx[howmany-1] #1000000
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    print motordistance
+    #print motordistance
     '''
     if 1 == speed:
         speed = 2
@@ -83,7 +85,6 @@ def moveMotor(unit, howmany, speed):
         speed = 1
     elif 1000 < speed:
         speed = 1000
-    #modbusClient.Clear()
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
     #print artdmx[howmany]
     modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
@@ -93,7 +94,7 @@ def moveMotor(unit, howmany, speed):
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     pos[unit] = howmany
-
+    
 def JogMotor(unit, JogWhat):
     
     modbusClient.UnitIdentifier = unit
@@ -143,7 +144,7 @@ def handler(socket,fortuple):
                         idx += 1
                         b = rawbytes[idx]
                         idx += 1
-                        print "x %d y %d r %d g %d b %d" % (x,y,r,g,b)
+                        print ("x %d y %d r %d g %d b %d" % (x,y,r,g,b))
                         #unicorn.set_pixel(x, y, r, g, b)
                         x += 1
                         if (x > 24):
@@ -162,7 +163,7 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    print (args[0], args[1], args[2]) 
+    #print (args[0], args[1], args[2]) 
     global func_list
     func_list.append( lambda : moveMotor( args[0], args[1], args[2] ) )
 	
@@ -179,16 +180,16 @@ def each_frame():
 cc = OSC.OSCClient()
 cc.connect(('127.0.0.1', 7110))
 
-modbusClient = ModbusClient('COM6') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM35') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
 modbusClient.Baudrate = 115200
 modbusClient.Stopbits = Stopbits.one
-modbusClient.timeout = 0.016
+#modbusClient.timeout = 0.001
 modbusClient.Connect()
 motornum = 13
-pos = [128] * motornum * 2
+pos = [128] * (motornum << 1)
 howmanylevel = 128
 artdmx = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
@@ -217,23 +218,27 @@ server.handle_timeout = types.MethodType(handle_timeout, server)
 server.addMsgHandler( "/motor", user_callback )
 
 #thread.start_new_thread(handler,(sock,0))
-thread.start_new_thread(each_frame,())
+_thread.start_new_thread(each_frame,())
 
 func_list = []
-
-for jj in range(1, motornum):
+sleeptime = 0.02
+#for jj in range(1, motornum):
 #for jj in range(motornum, 25):
+for jj in range(1, 2):
     goZero(jj)
-#moveMotor( 1, 64, 25 )
+
 while True:
     for jj in func_list:
         jj()
+        #print len(func_list)
         func_list.pop(0)
     for ii in range(1, motornum):
     #for ii in range(motornum, 25):
         readInput(ii)
-        #time.sleep(modbusClient.timeout)
-		
+        time.sleep(sleeptime)
+        if len(func_list) > 0:
+            break
+        
 modbusClient.close()
 sock.close()
 server.close()
