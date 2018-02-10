@@ -33,7 +33,7 @@ def readInput(unit):
         #di9 = (holdingRegisters[0] & 0x0100) >> 8
         #di10 = (holdingRegisters[0] & 0x0200) >> 9
         if(di8 == 0):
-            if( holdingRegisters[1] < (motornum << 1) ):		
+            if True: #( holdingRegisters[1] < (motornum << 1) ):        
                 click(holdingRegisters[1],pos[holdingRegisters[1]])
             #click(unit,pos[unit])
             '''
@@ -47,7 +47,7 @@ def readInput(unit):
         #print (unit)
 
 def goZero(unit):
-    
+    global writetime
     modbusClient.UnitIdentifier = unit
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
@@ -55,14 +55,17 @@ def goZero(unit):
     #modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
+    modbusClient.WriteSingleRegister(0x032C, 1, unit)
     modbusClient.WriteSingleRegister(0x0840, 25, unit)
     modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0000], unit)
     modbusClient.WriteSingleRegister(0x08A2, 0, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-        
-def moveMotor(unit, howmany, speed):
+    time.sleep(writetime)
+    modbusClient.readmore(8)
     
+def moveMotor(unit, howmany, speed, acc):
+    global writetime
     modbusClient.UnitIdentifier = unit
     motordistance = 0
     if unit == 25: #speed % 2 == 0:
@@ -86,6 +89,7 @@ def moveMotor(unit, howmany, speed):
     elif 1000 < speed:
         speed = 1000
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
+    modbusClient.WriteSingleRegister(0x0860, acc, unit)
     #print artdmx[howmany]
     modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
@@ -94,7 +98,9 @@ def moveMotor(unit, howmany, speed):
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     pos[unit] = howmany
-    
+    time.sleep(writetime)
+    modbusClient.readmore(8)
+	
 def JogMotor(unit, JogWhat):
     
     modbusClient.UnitIdentifier = unit
@@ -165,8 +171,8 @@ def user_callback(path, tags, args, source):
     # source is where the message came from (in case you need to reply)
     #print (args[0], args[1], args[2]) 
     global func_list
-    func_list.append( lambda : moveMotor( args[0], args[1], args[2] ) )
-	
+    func_list.append( lambda : moveMotor( args[0], args[1], args[2], args[3] ) )
+    
 # user script that's called by the game engine every frame
 def each_frame():
     # simulate a "game engine"
@@ -221,7 +227,8 @@ server.addMsgHandler( "/motor", user_callback )
 _thread.start_new_thread(each_frame,())
 
 func_list = []
-sleeptime = 0.02
+sleeptime = 0.019
+writetime = 0.006
 #for jj in range(1, motornum):
 #for jj in range(motornum, 25):
 for jj in range(1, 2):

@@ -34,8 +34,8 @@ class ModbusClient(object):
         self.ser = None
         self.tcpClientSocket = None
         self.__connected = False
-        self.timeout = 0;
-        self.writeTimeout = 0.015;
+        self.timeout = 0.001;
+        self.writeTimeout = 0.001;
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
@@ -477,7 +477,7 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            self.printFAE("CMD06H req", data)
+            #self.printFAE("CMD06H req", data)
             self.ser.timeout = self.writeTimeout
             self.ser.write(data)
             bytesToRead = 8
@@ -494,7 +494,7 @@ class ModbusClient(object):
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
                 elif ord(data[0]) == unit:
-                    self.printFAE("CMD06H res", data)
+                    #self.printFAE("CMD06H res", data)
                     return True 
             else:
                 return False   
@@ -637,7 +637,7 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data.append(CrcLSB)
             data.append(CrcMSB)
-            self.printFAE("CMD10H req", data)
+            #self.printFAE("CMD10H req", data)
             self.ser.timeout = self.writeTimeout
             self.ser.write(data)
             bytesToRead = 8
@@ -654,7 +654,7 @@ class ModbusClient(object):
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
                 if ord(data[0]) == unit:
-                    self.printFAE("CMD10H res", data)
+                    #self.printFAE("CMD10H res", data)
                     return True 
             else:
                 return False     
@@ -704,9 +704,14 @@ class ModbusClient(object):
                print hex(ord(data[ii])),
             elif whoami[-3:] == "req":   
                print hex(data[ii]),
-               
-        print "" 
+        print 
 
+    def readmore(self, bytesToRead):
+        data = self.ser.read(bytesToRead)        
+        for ii in range(0, len(data)):
+            print hex(ord(data[ii])),
+        print
+            
     @property
     def Port(self):
         """
