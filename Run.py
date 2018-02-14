@@ -228,7 +228,7 @@ _thread.start_new_thread(each_frame,())
 
 func_list = []
 sleeptime = 0.019
-writetime = 0.006
+writetime = 0.008
 #for jj in range(1, motornum):
 #for jj in range(motornum, 25):
 for jj in range(1, 2):
