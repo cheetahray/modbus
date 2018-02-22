@@ -27,25 +27,28 @@ def click(X, Y):
 def readInput(unit):
     modbusClient.UnitIdentifier = unit
     holdingRegisters = modbusClient.ReadHoldingRegisters(0x0204, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-    if(len(holdingRegisters)):
-        print (unit, holdingRegisters)
-        di8 = (holdingRegisters[0] & 0x0080)
-        #di9 = (holdingRegisters[0] & 0x0100) >> 8
-        #di10 = (holdingRegisters[0] & 0x0200) >> 9
-        if(di8 == 0):
-            if True: #( holdingRegisters[1] < (motornum << 1) ):        
-                click(holdingRegisters[1],pos[holdingRegisters[1]])
-            #click(unit,pos[unit])
-            '''
-            holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
-            #print (holdingRegisters)
-            pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
-            print (pos[unit])
-            '''
-    else:
+    try:
+        if(len(holdingRegisters)):
+            print (unit, holdingRegisters)
+            di8 = (holdingRegisters[0] & 0x0080)
+            #di9 = (holdingRegisters[0] & 0x0100) >> 8
+            #di10 = (holdingRegisters[0] & 0x0200) >> 9
+            if(di8 == 0):
+                if True: #( holdingRegisters[1] < (motornum << 1) ):        
+                    click(holdingRegisters[1],pos[holdingRegisters[1]])
+                #click(unit,pos[unit])
+                '''
+                holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
+                #print (holdingRegisters)
+                pos[unit] = (holdingRegisters[1] << 16) + holdingRegisters[0]
+                print (pos[unit])
+                '''
+        else:
+            pass
+            #print (unit)
+    except IndexError, e:
         pass
-        #print (unit)
-
+	
 def goZero(unit):
     global writetime
     modbusClient.UnitIdentifier = unit
@@ -100,7 +103,7 @@ def moveMotor(unit, howmany, speed, acc):
     pos[unit] = howmany
     time.sleep(writetime)
     modbusClient.readmore(8)
-	
+    
 def JogMotor(unit, JogWhat):
     
     modbusClient.UnitIdentifier = unit
