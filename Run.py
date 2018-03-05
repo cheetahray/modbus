@@ -30,10 +30,10 @@ def readInput(unit):
     try:
         if(len(holdingRegisters)):
             print (unit, holdingRegisters)
-            di8 = (holdingRegisters[0] & 0x0080)
+            #di8 = (holdingRegisters[0] & 0x0080)
             #di9 = (holdingRegisters[0] & 0x0100) >> 8
             #di10 = (holdingRegisters[0] & 0x0200) >> 9
-            if(di8 == 0):
+            if(833 == holdingRegisters[0]):
                 if True: #( holdingRegisters[1] < (motornum << 1) ):        
                     click(holdingRegisters[1],pos[holdingRegisters[1]])
                 #click(unit,pos[unit])
@@ -59,22 +59,25 @@ def goZero(unit):
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     modbusClient.WriteSingleRegister(0x032C, 1, unit)
+    time.sleep(writetime)
     modbusClient.WriteSingleRegister(0x0840, 25, unit)
+    time.sleep(writetime)
     modbusClient.WriteMultipleRegisters(0x0704, [0x0012, 0x0000], unit)
+    time.sleep(writetime)
     modbusClient.WriteSingleRegister(0x08A2, 0, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     time.sleep(writetime)
-    modbusClient.readmore(8)
+    modbusClient.readmore(32)
     
 def moveMotor(unit, howmany, speed, acc):
     global writetime
     modbusClient.UnitIdentifier = unit
     motordistance = 0
     if unit == 25: #speed % 2 == 0:
-        motordistance = artdmx[howmany-1] * -1 #-1000000
+        motordistance = artdmx[howmany] * -1 #-1000000
     else:
-        motordistance = artdmx[howmany-1] #1000000
+        motordistance = artdmx[howmany] #1000000
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0703, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     #print motordistance
@@ -92,9 +95,12 @@ def moveMotor(unit, howmany, speed, acc):
     elif 1000 < speed:
         speed = 1000
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
+    time.sleep(writetime)
     modbusClient.WriteSingleRegister(0x0860, acc, unit)
+    time.sleep(writetime)
     #print artdmx[howmany]
     modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
+    time.sleep(writetime)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     modbusClient.WriteSingleRegister(0x08A2, 1, unit)
@@ -102,7 +108,7 @@ def moveMotor(unit, howmany, speed, acc):
     #print (holdingRegisters)
     pos[unit] = howmany
     time.sleep(writetime)
-    modbusClient.readmore(8)
+    modbusClient.readmore(32)
     
 def JogMotor(unit, JogWhat):
     
@@ -172,7 +178,7 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    #print (args[0], args[1], args[2]) 
+    print (args[0], args[1], args[2], args[3]) 
     global func_list
     func_list.append( lambda : moveMotor( args[0], args[1], args[2], args[3] ) )
     
@@ -231,7 +237,7 @@ _thread.start_new_thread(each_frame,())
 
 func_list = []
 sleeptime = 0.019
-writetime = 0.008
+writetime = 0.007
 #for jj in range(1, motornum):
 #for jj in range(motornum, 25):
 for jj in range(1, 2):
