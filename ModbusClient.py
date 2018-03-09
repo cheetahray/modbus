@@ -3,7 +3,7 @@ Created on 12.09.2016
 
 @author: Stefan Rossmann
 '''
-#import serial
+import time
 import importlib
 import Exceptions
 import socket
@@ -34,8 +34,8 @@ class ModbusClient(object):
         self.ser = None
         self.tcpClientSocket = None
         self.__connected = False
-        self.timeout = 0.001;
-        self.writeTimeout = 0.001;
+        self.timeout = 0.019;
+        self.writeTimeout = 0.009;
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
@@ -70,7 +70,7 @@ class ModbusClient(object):
                 self.ser.parity = serial.PARITY_ODD
             elif self._parity == 2:               
                 self.ser.parity = serial.PARITY_NONE 
-            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=self.timeout, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
+            self.ser = serial.Serial(self.serialPort, self._baudrate, timeout=0, parity=self.ser.parity, stopbits=self.ser.stopbits, xonxoff=0, rtscts=0)
         print (self.ser)
         if (self.tcpClientSocket is not None):  
             self.tcpClientSocket.connect((self._ipAddress, self._port))
@@ -274,6 +274,7 @@ class ModbusClient(object):
             #self.printFAE("CMD03H req", data)
             self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
+            time.sleep(self.timeout + (quantity-1)*0.008 )
             data = self.ser.read(bytesToRead)
             myList = list()
             try:
@@ -477,12 +478,11 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data[6] = CrcLSB
             data[7] = CrcMSB
-            #self.printFAE("CMD06H req", data)
-            self.ser.timeout = self.writeTimeout
+            self.printFAE("CMD06H req", data)
             self.ser.write(data)
             bytesToRead = 8
+            time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
-            self.ser.timeout = self.timeout
             if len(data) > 1:
                 if (data[1] == 0x86):
                     if (data[2] == 0x01):
@@ -494,7 +494,7 @@ class ModbusClient(object):
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
                 elif ord(data[0]) == unit:
-                    #self.printFAE("CMD06H res", data)
+                    self.printFAE("CMD06H res", data)
                     return True 
             else:
                 return False   
@@ -637,12 +637,11 @@ class ModbusClient(object):
             CrcMSB = (CRC&0xFF00) >> 8
             data.append(CrcLSB)
             data.append(CrcMSB)
-            #self.printFAE("CMD10H req", data)
-            self.ser.timeout = self.writeTimeout
+            self.printFAE("CMD10H req", data)
             self.ser.write(data)
             bytesToRead = 8
+            time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
-            self.ser.timeout = self.timeout
             if len(data) > 0:            
                 if (data[1] == 0x90):
                     if (data[2] == 0x01):
@@ -654,7 +653,7 @@ class ModbusClient(object):
                     elif (data[2] == 0x04):
                         raise Exceptions.ModbusException("error reading");
                 if ord(data[0]) == unit:
-                    #self.printFAE("CMD10H res", data)
+                    self.printFAE("CMD10H res", data)
                     return True 
             else:
                 return False     
