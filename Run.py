@@ -75,7 +75,7 @@ def goZero(unit):
 def moveMotor(unit, howmany, speed, acc):
     modbusClient.UnitIdentifier = unit
     motordistance = 0
-    if unit == 25: #speed % 2 == 0:
+    if False: #unit == 25:
         motordistance = artdmx[howmany] * -1 #-1000000
     else:
         motordistance = artdmx[howmany] #1000000
@@ -90,11 +90,11 @@ def moveMotor(unit, howmany, speed, acc):
     if speed <= 7 and speed >= 1:
         speed = speed - 1            
         modbusClient.WriteSingleRegister(0x0705, speed, unit) #modbusClient.WriteMultipleRegisters(0x0704, [0x0012, speed], unit)
-    '''
     if 1 > speed:
         speed = 1
     elif 1000 < speed:
         speed = 1000
+    '''
     modbusClient.WriteSingleRegister(0x0840, speed, unit)
     modbusClient.WriteSingleRegister(0x0860, acc, unit)
     #print artdmx[howmany]

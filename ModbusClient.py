@@ -34,8 +34,8 @@ class ModbusClient(object):
         self.ser = None
         self.tcpClientSocket = None
         self.__connected = False
-        self.timeout = 0.019;
-        self.writeTimeout = 0.009;
+        self.timeout = 0.02;
+        self.writeTimeout = 0.01;
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
