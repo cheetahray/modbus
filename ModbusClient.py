@@ -9,6 +9,7 @@ import Exceptions
 import socket
 import struct
 from builtins import int
+import threading
 '''
 from _testcapi import instancemethod
 from test.test_array import SIGNED_INT16_BE
@@ -34,8 +35,9 @@ class ModbusClient(object):
         self.ser = None
         self.tcpClientSocket = None
         self.__connected = False
-        self.timeout = 0.02;
-        self.writeTimeout = 0.01;
+        self.timeout = 0.021;
+        self.writeTimeout = 0.025;
+        self.my_mutex = threading.Lock()
         #Constructor for RTU
         if len(params) == 1 & isinstance(params[0], str):
             serial = importlib.import_module("serial")
@@ -272,10 +274,12 @@ class ModbusClient(object):
             data[6] = CrcLSB
             data[7] = CrcMSB
             #self.printFAE("CMD03H req", data)
-            self.ser.write(data)
             bytesToRead = 5+int(quantity*2)
+            self.my_mutex.acquire()
+            self.ser.write(data)
             time.sleep(self.timeout + (quantity-1)*0.008 )
             data = self.ser.read(bytesToRead)
+            self.my_mutex.release()
             myList = list()
             try:
                 if len(data) > 0:
@@ -479,10 +483,12 @@ class ModbusClient(object):
             data[6] = CrcLSB
             data[7] = CrcMSB
             self.printFAE("CMD06H req", data)
-            self.ser.write(data)
             bytesToRead = 8
+            self.my_mutex.acquire()
+            self.ser.write(data)
             time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
+            self.my_mutex.release()
             if len(data) > 1:
                 if (data[1] == 0x86):
                     if (data[2] == 0x01):
@@ -638,11 +644,13 @@ class ModbusClient(object):
             data.append(CrcLSB)
             data.append(CrcMSB)
             self.printFAE("CMD10H req", data)
-            self.ser.write(data)
             bytesToRead = 8
+            self.my_mutex.acquire()
+            self.ser.write(data)
             time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
-            if len(data) > 0:            
+            self.my_mutex.release()
+            if len(data) > 1:            
                 if (data[1] == 0x90):
                     if (data[2] == 0x01):
                         raise Exceptions.FunctionCodeNotSupportedException("Function code not supported by master");
