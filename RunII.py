@@ -172,7 +172,7 @@ def stop_callback(path, tags, args, source):
     
 def moveMotor(unit, howmany, speed, acc):
     modbusClient.UnitIdentifier = unit
-    
+    boolII = False
     motordistance = 0
     if False: #unit == 25:
         motordistance = artdmx[howmany] * -1 #-1000000
@@ -189,25 +189,27 @@ def moveMotor(unit, howmany, speed, acc):
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     if 127 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+1, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+1, unit)
     elif 100 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+6, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+6, unit)
     elif 75 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+11, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+11, unit)
     elif 50 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+16, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+16, unit)
     elif 25 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+21, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+21, unit)
     elif 0 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+26, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, speed+26, unit)
     else:
         idx = speed + 1
         modbusClient.WriteMultipleRegisters(0x0838, [0x0012 + (idx << 8) + (idx << 12), idx, motordistance & 0xFFFF, motordistance >> 16], unit)
-        modbusClient.WriteSingleRegister(0x08A2, 63, unit)
+        boolII = modbusClient.WriteSingleRegister(0x08A2, 63, unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     #time.sleep(modbusClient.writeTimeout)
-    #modbusClient.readmore(32)
+    if False == boolII:
+        print "Fa"
+        modbusClient.readmore(8)
     
 def JogMotor(unit, JogWhat):
     
@@ -310,7 +312,7 @@ artdmx = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
     
 for ii in range(0,howmanylevel):
-    artdmx[howmanylevel-ii-1] = int(ii * dividee)  + 200000
+    artdmx[howmanylevel-ii-1] = int(ii * dividee)  + 300000
 
 for ii in range(0,howmanylevel):
     print (artdmx[ii])

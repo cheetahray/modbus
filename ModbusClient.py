@@ -502,6 +502,9 @@ class ModbusClient(object):
                 elif ord(data[0]) == unit:
                     self.printFAE("CMD06H res", data)
                     return True 
+                else:
+                    self.printFAE("CMD06H res", data)
+                    return False
             else:
                 return False   
         else:

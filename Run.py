@@ -314,8 +314,8 @@ artdmx2 = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
 dividee2 = (95900000/howmanylevel)    
 for ii in range(0,howmanylevel):
-    artdmx[howmanylevel-ii-1] = int(ii * dividee) + 200000
-    artdmx2[howmanylevel-ii-1] = int(ii * dividee2) + 200000
+    artdmx[howmanylevel-ii-1] = int(ii * dividee) + 300000
+    artdmx2[howmanylevel-ii-1] = int(ii * dividee2) + 300000
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
 
