@@ -12,16 +12,15 @@ import sys
 import types
 import math
 import random
-import threading
 import argparse
 
 IN = [False, False, False, False, False, False]
-def sec(idx,idx2):
+def sec(idx, idx2):
     IN[idx] = False
 
 def click(X, Y):
     global cc
-    XX = X-1
+    XX = X-19
     if(False == IN[XX]):
         threading.Timer(1, sec, (XX, XX)).start()
         oscmsg = OSC.OSCMessage()
@@ -58,10 +57,7 @@ def readInput(unit):
                 holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, holdingRegisters[1]) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
                 pos = artdmx[0] - (holdingRegisters[1] << 16) + holdingRegisters[0]
                 print pos
-                if False: #5 == unit:
-                    click( holdingRegisters[2], math.ceil( float(pos) / artdmx2[0] * 127 ) )
-                else:
-                    click( holdingRegisters[2], math.ceil( float(pos) / artdmx[0] * 127 ) )
+                click( holdingRegisters[2], math.ceil( float(pos) / artdmx[0] * 127 ) )
         else:
             #pass
             print (unit)
@@ -76,7 +72,7 @@ def goZero(unit,z1,z2):
     #modbusClient.WriteMultipleRegisters(0x0702, [0, 0], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    if "T" == z1:    
+    if "T" == z1:
         modbusClient.WriteSingleRegister(0x0842, 250, unit)
         modbusClient.WriteSingleRegister(0x0862, 21000, unit)
         modbusClient.WriteSingleRegister(0x0844, 300, unit)
@@ -158,7 +154,7 @@ def goZero(unit,z1,z2):
         modbusClient.WriteSingleRegister(0x0700,  1, unit)
         modbusClient.WriteSingleRegister(0x031C,200, unit)
         modbusClient.WriteSingleRegister(0x031E,1000, unit)
-    if "T" == z2:
+    if "T" == z2:    
         modbusClient.WriteSingleRegister(0x032C, 1, unit)
         modbusClient.WriteSingleRegister(0x08A2, 0, unit)
         #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
@@ -173,15 +169,15 @@ def stop_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    print "stop", args[0] 
+    print "stop", args[0]
     modbusClient.WriteSingleRegister(0x08A2, 1000, args[0])
-
+    
 def moveMotor(unit, howmany, speed, acc):
     modbusClient.UnitIdentifier = unit
     
     motordistance = 0
-    if False: #5 == unit:
-        motordistance = artdmx2[howmany]#-1000000
+    if False: #unit == 25:
+        motordistance = artdmx[howmany] * -1 #-1000000
     else:
         motordistance = artdmx[howmany] #1000000
     #print motordistance
@@ -301,7 +297,7 @@ cc.connect(('127.0.0.1', 7110))
 dd = OSC.OSCClient()
 dd.connect(('127.0.0.1', 7740))
 
-modbusClient = ModbusClient('COM5') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM9') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -312,19 +308,19 @@ modbusClient.Connect()
 motornum = 6
 howmanylevel = 128
 artdmx = [0] * howmanylevel
-artdmx2 = [0] * howmanylevel
+
 dividee = (100000000/howmanylevel)
-dividee2 = (95900000/howmanylevel)    
+    
 for ii in range(0,howmanylevel):
     artdmx[howmanylevel-ii-1] = int(ii * dividee) + 300000
-    artdmx2[howmanylevel-ii-1] = int(ii * dividee2) + 300000
+
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
 
 #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 #sock.bind(("0.0.0.0", 6454))
 
-server = OSC.OSCServer( ("0.0.0.0", 7730) )
+server = OSC.OSCServer( ("0.0.0.0", 7733) )
 server.timeout = 0.001
 
 # this method of reporting timeouts only works by convention
@@ -343,8 +339,8 @@ server.addMsgHandler( "/stop", stop_callback )
 _thread.start_new_thread(each_frame,())
 
 func_list = []
-fromwho = 1
-towho = 7
+fromwho = 19
+towho = 25
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--z1", default="T")
@@ -370,7 +366,7 @@ while True:
         readInput(ii)
         #if len(func_list) > 0:
             #break
-
+        
 modbusClient.close()
 sock.close()
 server.close()
