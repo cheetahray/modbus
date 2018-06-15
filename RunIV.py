@@ -152,7 +152,7 @@ def goZero(unit,z1,z2):
         modbusClient.WriteSingleRegister(0x0840, 25, unit)
         modbusClient.WriteSingleRegister(0x0306, 33, unit)
         modbusClient.WriteSingleRegister(0x0700,  1, unit)
-        modbusClient.WriteSingleRegister(0x031C,200, unit)
+        modbusClient.WriteSingleRegister(0x031C,300, unit)
         modbusClient.WriteSingleRegister(0x031E,1000, unit)
     if "T" == z2:    
         modbusClient.WriteSingleRegister(0x032C, 1, unit)

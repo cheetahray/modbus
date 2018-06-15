@@ -8,7 +8,7 @@ import math
 import random
 import argparse
 
-modbusClient = ModbusClient('COM7') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM8') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -49,8 +49,11 @@ modbusClient.Connect()
 #print modbusClient.ReadHoldingRegisters(0x0306, 1, 14)
 
 # Go Zero
-modbusClient.WriteSingleRegister(0x08A2, 1000, 11)
-modbusClient.WriteSingleRegister(0x08A2, 1000, 10)
+#modbusClient.WriteSingleRegister(0x08A2, 1000, 3)
+#modbusClient.WriteSingleRegister(0x08A2, 1000, 12)
+#modbusClient.WriteSingleRegister(0x08A2, 1000, 11)
+#modbusClient.WriteSingleRegister(0x08A2, 1000, 10)
+modbusClient.WriteSingleRegister(0x08A2, 1000, 14)
 # Write PR
 #motordistance = 3937800000
 #idx = 1
