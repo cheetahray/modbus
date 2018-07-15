@@ -302,7 +302,7 @@ cc.connect(('127.0.0.1', 7110))
 dd = OSC.OSCClient()
 dd.connect(('127.0.0.1', 7740))
 
-modbusClient = ModbusClient('COM9') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM37') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -351,7 +351,26 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--z1", default="F")
 parser.add_argument("--z2", default="F")
 args = parser.parse_args()
-modbusClient.WriteMultipleRegisters(0x0009, [0x0100,1000,1000,100], unit)        
+'''
+modbusClient.WriteSingleRegister(0x010F, 200, 1)
+modbusClient.WriteSingleRegister(0x0407, 0x0100, 1)
+'''
+modbusClient.WriteSingleRegister(0x0306, 0x1F80, 1)
+#print modbusClient.ReadHoldingRegisters(0x0009, 4, 1)
+modbusClient.WriteMultipleRegisters(0x0009, [-25, 2500, 200], 1)
+modbusClient.WriteSingleRegister(0x0407, 0x0100, 1)
+modbusClient.WriteSingleRegister(0x0407, 0, 1)
+time.sleep(5)
+modbusClient.WriteMultipleRegisters(0x0009, [-50, 2500, 1000], 1)
+modbusClient.WriteSingleRegister(0x0407, 0x0100, 1)
+modbusClient.WriteSingleRegister(0x0407, 0, 1)
+#modbusClient.WriteSingleRegister(0x0224, 1000, 1)
+'''
+modbusClient.WriteSingleRegister(0x000C, 128, 1)
+time.sleep(0.02)
+modbusClient.WriteMultipleRegisters(0x0009, [50, 2500, 1000, 0x0100], 1)
+modbusClient.WriteSingleRegister(0x000C, 8, 1)
+'''
 for jj in range(fromwho, towho):
     goZero(jj,args.z1,args.z2)
     #pass
@@ -360,7 +379,7 @@ for next in range(fromwho, towho):
     click ( next, random.randint(1,127) )
     time.sleep(1)
 '''
-while True:
+while False:
     '''
     for jj in func_list:
         jj()
@@ -373,5 +392,5 @@ while True:
             #break
         
 modbusClient.close()
-sock.close()
+#sock.close()
 server.close()
