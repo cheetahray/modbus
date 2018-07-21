@@ -176,6 +176,7 @@ def stop_callback(path, tags, args, source):
     modbusClient.WriteSingleRegister(0x08A2, 1000, args[0])
     
 def moveMotor(unit, howmany, speed, acc):
+    global nowwho
     modbusClient.UnitIdentifier = unit
     
     motordistance = 0
@@ -193,24 +194,52 @@ def moveMotor(unit, howmany, speed, acc):
     #modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    if False: #127 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+1, unit)
-    elif False: #100 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+6, unit)
-    elif False: #75 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+11, unit)
-    elif False: #50 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+16, unit)
-    elif False: #25 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+21, unit)
-    elif False: #0 == howmany:
-        modbusClient.WriteSingleRegister(0x08A2, speed+26, unit)
-    else:
-        
-        #idx = speed + 1
-        #modbusClient.WriteMultipleRegisters(0x0838, [0x0012 + (idx << 8) + (idx << 12), idx, motordistance & 0xFFFF, motordistance >> 16], unit) #Set Pos and Speed
-        #modbusClient.WriteSingleRegister(0x08A2, 63, unit) #execute PR
-        modbusClient.WriteMultipleRegisters(0x0009, [0x0100,1000,1000,100], unit)
+    if 127 == howmany:
+        motordistance = artdmx[127]
+    elif 100 == howmany:
+        motordistance = artdmx[100]
+    elif 75 == howmany:
+        motordistance = artdmx[75]
+    elif 50 == howmany:
+        motordistance = artdmx[50]
+    elif 25 == howmany:
+        motordistance = artdmx[25]
+    elif 0 == howmany:
+        motordistance = artdmx[0]
+    
+    if 0 == speed:
+        speed = 2500
+    elif 1 == speed:
+        speed = 3000
+    elif 2 == speed:
+        speed = 6000
+    elif 3 == speed:
+        speed = 7500
+    elif 4 == speed:
+        speed = 9000
+    
+    if 0 == acc:
+        acc = 21000
+    elif 1 == acc:
+        acc = 10000
+    elif 2 == acc:
+        acc = 7000
+    elif 3 == acc:
+        acc = 5000
+    elif 4 == acc:
+        acc = 3000
+    
+    if 1 == unit:
+        if 2 == nowwho:
+            #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [0, 0, motordistance & 0xFFFF, motordistance >> 16, speed, acc, nowwho, 5], unit)
+            nowwho = 1
+        else:
+            #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 0, 0, speed, acc, nowwho, 5], unit)
+            nowwho = 2
+        #modbusClient.WriteSingleRegister(0x040E, 0, 1)
+
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x08A2, 1, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
     #time.sleep(modbusClient.writeTimeout)
@@ -282,7 +311,9 @@ def user_callback(path, tags, args, source):
     # tags will contain 'fff'
     # args is a OSCMessage with data
     # source is where the message came from (in case you need to reply)
-    print (args[0], args[1], args[2], args[3]) 
+    if args[0] == 1:
+        print "\n"
+        print (args[0], args[1], args[2], args[3]) 
     #global func_list
     #func_list.append( lambda : moveMotor( args[0], args[1], args[2], args[3] ) )
     moveMotor( args[0], args[1], args[2], args[3] )
@@ -325,7 +356,7 @@ for ii in range(0,howmanylevel):
 #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 #sock.bind(("0.0.0.0", 6454))
 
-server = OSC.OSCServer( ("0.0.0.0", 7733) )
+server = OSC.OSCServer( ("0.0.0.0", 7730) )
 server.timeout = 0.001
 
 # this method of reporting timeouts only works by convention
@@ -351,17 +382,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--z1", default="F")
 parser.add_argument("--z2", default="F")
 args = parser.parse_args()
-'''
-modbusClient.WriteSingleRegister(0x010F, 200, 1)
-modbusClient.WriteSingleRegister(0x0407, 0x0100, 1)
-'''
-print modbusClient.ReadHoldingRegisters(0x0046, 8, 1)
-'''
-modbusClient.WriteSingleRegister(0x000C, 128, 1)
-time.sleep(0.02)
-modbusClient.WriteMultipleRegisters(0x0009, [50, 2500, 1000, 0x0100], 1)
-modbusClient.WriteSingleRegister(0x000C, 8, 1)
-'''
+
+nowwho = 1
+
 for jj in range(fromwho, towho):
     goZero(jj,args.z1,args.z2)
     #pass
@@ -370,7 +393,7 @@ for next in range(fromwho, towho):
     click ( next, random.randint(1,127) )
     time.sleep(1)
 '''
-while False:
+while True:
     '''
     for jj in func_list:
         jj()
