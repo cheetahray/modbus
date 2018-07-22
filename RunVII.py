@@ -194,18 +194,8 @@ def moveMotor(unit, howmany, speed, acc):
     #modbusClient.WriteMultipleRegisters(0x0706, [motordistance & 0xFFFF, motordistance >> 16], unit)
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
-    if 127 == howmany:
-        motordistance = artdmx[127]
-    elif 100 == howmany:
-        motordistance = artdmx[100]
-    elif 75 == howmany:
-        motordistance = artdmx[75]
-    elif 50 == howmany:
-        motordistance = artdmx[50]
-    elif 25 == howmany:
-        motordistance = artdmx[25]
-    elif 0 == howmany:
-        motordistance = artdmx[0]
+
+    motordistance = artdmx[127-howmany]
     
     if 0 == speed:
         speed = 2500
@@ -232,11 +222,11 @@ def moveMotor(unit, howmany, speed, acc):
     if 1 == unit:
         if 2 == nowwho:
             #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
-            modbusClient.WriteMultipleRegisters(0x0032, [0, 0, motordistance & 0xFFFF, motordistance >> 16, speed, acc, nowwho, 5], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [0, 0, motordistance & 0xFFFF, motordistance >> 16, speed, acc, 5, nowwho], unit)
             nowwho = 1
         else:
             #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
-            modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 0, 0, speed, acc, nowwho, 5], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 0, 0, speed, acc, 5, nowwho], unit)
             nowwho = 2
         #modbusClient.WriteSingleRegister(0x040E, 0, 1)
 
@@ -333,7 +323,7 @@ cc.connect(('127.0.0.1', 7110))
 dd = OSC.OSCClient()
 dd.connect(('127.0.0.1', 7740))
 
-modbusClient = ModbusClient('COM37') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('/dev/serial0') #COM37') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -401,7 +391,9 @@ while True:
         func_list.pop(0)
     '''
     for ii in range(fromwho, towho):
-        time.sleep(3600) #readInput(ii)
+        moveMotor(1,0,0,0)
+        time.sleep(300)
+        #readInput(ii)
         #if len(func_list) > 0:
             #break
         
