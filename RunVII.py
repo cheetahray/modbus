@@ -195,30 +195,6 @@ def moveMotor(unit, howmany, speed, acc):
     #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0706, 2, unit) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
     #print (holdingRegisters)
 
-    motordistance = artdmx[127-howmany]
-    
-    if 0 == speed:
-        speed = 2500
-    elif 1 == speed:
-        speed = 3000
-    elif 2 == speed:
-        speed = 6000
-    elif 3 == speed:
-        speed = 7500
-    elif 4 == speed:
-        speed = 9000
-    
-    if 0 == acc:
-        acc = 21000
-    elif 1 == acc:
-        acc = 10000
-    elif 2 == acc:
-        acc = 7000
-    elif 3 == acc:
-        acc = 5000
-    elif 4 == acc:
-        acc = 3000
-    
     if 1 == unit:
         if 2 == nowwho:
             #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
@@ -272,9 +248,10 @@ def handler(socket,fortuple):
                     rgb_length = (rawbytes[16] << 8) + rawbytes[17]
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
-                    idx = 18
-                    print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
-                    
+                    #idx = 18
+                    #print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
+                    moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] )
+                    time.sleep(0.3)
         except ValueError:
             pass    
         except IndexError:
@@ -318,13 +295,17 @@ modbusClient.Stopbits = Stopbits.one
 #modbusClient.timeout = 0.001
 modbusClient.Connect()
 motornum = 6
-howmanylevel = 128
+howmanylevel = 256
 artdmx = [0] * howmanylevel
-
+spddmx = [0] * howmanylevel
+accdmx = [0] * howmanylevel
 dividee = (100000000/howmanylevel)
-    
+speedee = (9000/howmanylevel)
+accee = (21000/howmanylevel)
 for ii in range(0,howmanylevel):
-    artdmx[howmanylevel-ii-1] = int(ii * dividee) + 300000
+    artdmx[ii] = int(ii * dividee)
+    spddmx[ii] = int(ii * speedee)
+    accdmx[ii] = int(ii * accee)
 
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
