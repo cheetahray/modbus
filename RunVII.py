@@ -273,22 +273,8 @@ def handler(socket,fortuple):
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
                     idx = 18
-                    x = 0
-                    y = 0
-                    while ((idx < (rgb_length+18)) and (y < 1)):
-                        r = rawbytes[idx]
-                        idx += 1
-                        g = rawbytes[idx]
-                        idx += 1
-                        b = rawbytes[idx]
-                        idx += 1
-                        print ("x %d y %d r %d g %d b %d" % (x,y,r,g,b))
-                        #unicorn.set_pixel(x, y, r, g, b)
-                        x += 1
-                        if (x > 24):
-                            x = 0
-                            y += 1
-            
+                    print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+5],rawbytes[idx+7],rawbytes[idx+13]))
+                    
         except ValueError:
             pass    
         except IndexError:
@@ -361,8 +347,8 @@ server.handle_timeout = types.MethodType(handle_timeout, server)
 server.addMsgHandler( "/motor", user_callback )
 server.addMsgHandler( "/stop", stop_callback )
 
-#thread.start_new_thread(handler,(sock,0))
-_thread.start_new_thread(each_frame,())
+_thread.start_new_thread(handler,(sock,0))
+#_thread.start_new_thread(each_frame,())
 
 func_list = []
 fromwho = 1
