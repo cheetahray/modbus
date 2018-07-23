@@ -273,7 +273,7 @@ def handler(socket,fortuple):
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
                     idx = 18
-                    print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+5],rawbytes[idx+7],rawbytes[idx+13]))
+                    print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
                     
         except ValueError:
             pass    
@@ -329,8 +329,8 @@ for ii in range(0,howmanylevel):
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
 
-#sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-#sock.bind(("0.0.0.0", 6454))
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock.bind(("0.0.0.0", 6454))
 
 server = OSC.OSCServer( ("0.0.0.0", 7730) )
 server.timeout = 0.001
@@ -377,8 +377,7 @@ while True:
         func_list.pop(0)
     '''
     for ii in range(fromwho, towho):
-        moveMotor(1,0,0,0)
-        time.sleep(300)
+        time.sleep(3600)
         #readInput(ii)
         #if len(func_list) > 0:
             #break
