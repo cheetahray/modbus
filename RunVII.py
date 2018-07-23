@@ -232,6 +232,8 @@ def JogMotor(unit, JogWhat):
         print ("something wrong")
 
 def handler(socket,fortuple):
+    lastpos = 0
+    lastspeed = 0
     while True:
         try:
             data, addr = sock.recvfrom(1024)
@@ -248,10 +250,15 @@ def handler(socket,fortuple):
                     rgb_length = (rawbytes[16] << 8) + rawbytes[17]
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
-                    #idx = 18
+                    idx = 18
                     #print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
-                    moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] )
-                    time.sleep(0.3)
+                    if rawbytes[idx+6] != lastspeed or rawbytes[idx+4] != lastpos:
+                        if len(func_list) > 0:
+                            func_list[0] =  ( lambda : moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] ) )
+                        else:
+                            func_list.append( lambda : moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] ) )
+                        lastpos = rawbytes[idx+4]
+                        lastspeed = rawbytes[idx+6]
         except ValueError:
             pass    
         except IndexError:
@@ -328,6 +335,8 @@ server.handle_timeout = types.MethodType(handle_timeout, server)
 server.addMsgHandler( "/motor", user_callback )
 server.addMsgHandler( "/stop", stop_callback )
 
+nowwho = 1
+
 _thread.start_new_thread(handler,(sock,0))
 #_thread.start_new_thread(each_frame,())
 
@@ -340,8 +349,6 @@ parser.add_argument("--z1", default="F")
 parser.add_argument("--z2", default="F")
 args = parser.parse_args()
 
-nowwho = 1
-
 for jj in range(fromwho, towho):
     goZero(jj,args.z1,args.z2)
     #pass
@@ -351,17 +358,13 @@ for next in range(fromwho, towho):
     time.sleep(1)
 '''
 while True:
-    '''
+
     for jj in func_list:
         jj()
         #print len(func_list)
         func_list.pop(0)
-    '''
-    for ii in range(fromwho, towho):
-        time.sleep(3600)
-        #readInput(ii)
-        #if len(func_list) > 0:
-            #break
+        time.sleep(0.25)
+    time.sleep(0.001)
         
 modbusClient.close()
 #sock.close()
