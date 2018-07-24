@@ -8,7 +8,7 @@ import math
 import random
 import argparse
 
-modbusClient = ModbusClient('COM7') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM14') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -17,8 +17,8 @@ modbusClient.Stopbits = Stopbits.one
 #modbusClient.timeout = 0.001
 modbusClient.Connect()
 
-print modbusClient.ReadHoldingRegisters(0x08AA, 2, 8)
-print modbusClient.ReadHoldingRegisters(0x08AC, 2, 8)
+#print modbusClient.ReadHoldingRegisters(0x08AA, 2, 8)
+#print modbusClient.ReadHoldingRegisters(0x08AC, 2, 8)
 # incremental absolute
 #print modbusClient.ReadHoldingRegisters(0x0336, 1, 14)
 
@@ -31,8 +31,8 @@ print modbusClient.ReadHoldingRegisters(0x08AC, 2, 8)
 #modbusClient.WriteSingleRegister(0x0524, 1, 15)    
 
 # Read Alert
-#print modbusClient.ReadHoldingRegisters(0x0100, 1, 14)
-
+print modbusClient.ReadHoldingRegisters(0x0100, 1, 11)
+#print modbusClient.ReadHoldingRegisters(0x0100, 1, 23)
 # Read Distance
 #holdingRegisters = modbusClient.ReadHoldingRegisters(0x0024, 2, 11) #holdingRegisters = ConvertRegistersToFloat(modbusClient.ReadHoldingRegisters(2304, 1))
 #print holdingRegisters

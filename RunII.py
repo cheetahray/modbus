@@ -151,9 +151,11 @@ def goZero(unit, z1, z2):
         modbusClient.WriteMultipleRegisters(0x077A, [motordistance & 0xFFFF, motordistance >> 16], unit)
         motordistance = 100000000
         modbusClient.WriteMultipleRegisters(0x08AA, [motordistance & 0xFFFF, motordistance >> 16], unit)
-        modbusClient.WriteMultipleRegisters(0x08AC, [0, 0], unit)
-        modbusClient.WriteSingleRegister(0x031C, 200, unit)
-        modbusClient.WriteSingleRegister(0x031E,1000, unit)
+        modbusClient.WriteMultipleRegisters(0x08AC, [1, 32768], unit)
+        modbusClient.WriteSingleRegister(0x031C,  87, unit)
+        modbusClient.WriteSingleRegister(0x031E,   1, unit)
+        motordistance = 1600000
+        modbusClient.WriteMultipleRegisters(0x0324, [motordistance & 0xFFFF, motordistance >> 16], unit)
         modbusClient.WriteSingleRegister(0x0840,  25, unit)
         modbusClient.WriteSingleRegister(0x0306,  33, unit)
         modbusClient.WriteSingleRegister(0x0700,   1, unit)
@@ -302,7 +304,7 @@ cc.connect(('127.0.0.1', 7110))
 dd = OSC.OSCClient()
 dd.connect(('127.0.0.1', 7740))
 
-modbusClient = ModbusClient('COM7') #modbusClient = ModbusClient('127.0.0.1', 502)
+modbusClient = ModbusClient('COM14') #modbusClient = ModbusClient('127.0.0.1', 502)
 #modbusClient.Parity = Parity.odd
 modbusClient.Parity = Parity.even
 modbusClient.UnitIdentifier = 1
@@ -353,7 +355,7 @@ parser.add_argument("--z2", default="T")
 args = parser.parse_args()
         
 for jj in range(fromwho, towho):
-    if jj < 10:
+    if True: #jj < 10:
         goZero(jj,args.z1,args.z2)
     #pass
 '''
