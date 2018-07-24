@@ -198,11 +198,11 @@ def moveMotor(unit, howmany, speed, acc):
     if 1 == unit:
         if 2 == nowwho:
             #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
-            modbusClient.WriteMultipleRegisters(0x0032, [0, 0, motordistance & 0xFFFF, motordistance >> 16, speed, acc, 5, nowwho], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [0, 0, motordistance & 0xFFFF, motordistance >> 16, spddmx[speed], accdmx[acc], 5, nowwho], unit)
             nowwho = 1
         else:
             #modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 2000, 200, 0, 0, 14, 10], unit)
-            modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 0, 0, speed, acc, 5, nowwho], unit)
+            modbusClient.WriteMultipleRegisters(0x0032, [motordistance & 0xFFFF, motordistance >> 16, 0, 0, spddmx[speed], accdmx[acc], 5, nowwho], unit)
             nowwho = 2
         #modbusClient.WriteSingleRegister(0x040E, 0, 1)
 
@@ -254,9 +254,9 @@ def handler(socket,fortuple):
                     #print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
                     if rawbytes[idx+6] != lastspeed or rawbytes[idx+4] != lastpos:
                         if len(func_list) > 0:
-                            func_list[0] =  ( lambda : moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] ) )
+                            func_list[0] =  ( lambda : moveMotor( 1, rawbytes[idx+4], rawbytes[idx+6], 255 ) )
                         else:
-                            func_list.append( lambda : moveMotor( 1, rawbytes[idx+4], spddmx[rawbytes[idx+6]], accdmx[rawbytes[idx+6]] ) )
+                            func_list.append( lambda : moveMotor( 1, rawbytes[idx+4], rawbytes[idx+6], 255 ) )
                         lastpos = rawbytes[idx+4]
                         lastspeed = rawbytes[idx+6]
         except ValueError:
@@ -306,13 +306,13 @@ howmanylevel = 256
 artdmx = [0] * howmanylevel
 spddmx = [0] * howmanylevel
 accdmx = [0] * howmanylevel
-dividee = (100000000/howmanylevel)
-speedee = (9000/howmanylevel)
-accee = (21000/howmanylevel)
+dividee = (-4000000/howmanylevel)
+speedee = (6500/howmanylevel)
+accee = (18000/howmanylevel)
 for ii in range(0,howmanylevel):
     artdmx[ii] = int(ii * dividee)
-    spddmx[ii] = int(ii * speedee)
-    accdmx[ii] = int(ii * accee)
+    spddmx[ii] = int(ii * speedee) + 2500
+    accdmx[ii] = int(ii * accee ) + 3000
 
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
@@ -365,7 +365,12 @@ while True:
         func_list.pop(0)
         time.sleep(0.25)
     time.sleep(0.001)
-        
+    '''
+    moveMotor(1,10,50,255)
+    time.sleep(8)
+    moveMotor(1,215,50,255)
+    time.sleep(8)
+    '''    
 modbusClient.close()
 #sock.close()
 server.close()
