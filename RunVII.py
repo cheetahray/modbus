@@ -234,6 +234,7 @@ def JogMotor(unit, JogWhat):
 def handler(socket,fortuple):
     lastpos = 0
     lastspeed = 0
+    lastacc = 0
     while True:
         try:
             data, addr = sock.recvfrom(1024)
@@ -251,14 +252,17 @@ def handler(socket,fortuple):
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
                     idx = 18
-                    #print ("1 %d 5 %d 7 %d 13 %d" % (rawbytes[idx],rawbytes[idx+4],rawbytes[idx+6],rawbytes[idx+12]))
-                    if rawbytes[idx+6] != lastspeed or rawbytes[idx+4] != lastpos:
+                    if universe == 0 and ( rawbytes[idx+10] != lastspeed or rawbytes[idx+9] != lastpos or rawbytes[idx+11] != lastacc ):
+                        #print ("1 %d 5 %d 7 %d 13 %d" % (lastpos , lastspeed, rawbytes[idx+9], rawbytes[idx+10]))
+                        lastpos = rawbytes[idx+9]
+                        lastspeed = rawbytes[idx+10]
+                        lastacc = rawbytes[idx+11]
                         if len(func_list) > 0:
-                            func_list[0] =  ( lambda : moveMotor( 1, rawbytes[idx+4], rawbytes[idx+6], 255 ) )
+                            #print rawbytes[idx+9]
+                            func_list[0] =  ( lambda : moveMotor( 1, lastpos, lastspeed, lastacc ) )
                         else:
-                            func_list.append( lambda : moveMotor( 1, rawbytes[idx+4], rawbytes[idx+6], 255 ) )
-                        lastpos = rawbytes[idx+4]
-                        lastspeed = rawbytes[idx+6]
+                            #print rawbytes[idx+9]
+                            func_list.append( lambda : moveMotor( 1, lastpos, lastspeed, lastacc ) )
         except ValueError:
             pass    
         except IndexError:
@@ -306,13 +310,13 @@ howmanylevel = 256
 artdmx = [0] * howmanylevel
 spddmx = [0] * howmanylevel
 accdmx = [0] * howmanylevel
-dividee = (-4000000/howmanylevel)
+dividee = (-12000000/howmanylevel)
 speedee = (6500/howmanylevel)
 accee = (18000/howmanylevel)
 for ii in range(0,howmanylevel):
     artdmx[ii] = int(ii * dividee)
     spddmx[ii] = int(ii * speedee) + 2500
-    accdmx[ii] = int(ii * accee ) + 3000
+    accdmx[ii] = 21000 - int(ii * accee )
 
 for ii in range(0,howmanylevel):
     print (artdmx[ii])
@@ -365,12 +369,13 @@ while True:
         func_list.pop(0)
         time.sleep(0.25)
     time.sleep(0.001)
+    #print artdmx[120]
     '''
-    moveMotor(1,10,50,255)
-    time.sleep(8)
-    moveMotor(1,215,50,255)
-    time.sleep(8)
-    '''    
+    for ii in range(0,howmanylevel,1):
+        print ii
+        moveMotor(1,ii,0,255)
+        time.sleep(1)
+    '''
 modbusClient.close()
 #sock.close()
 server.close()
