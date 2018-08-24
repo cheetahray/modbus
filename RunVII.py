@@ -310,7 +310,7 @@ howmanylevel = 256
 artdmx = [0] * howmanylevel
 spddmx = [0] * howmanylevel
 accdmx = [0] * howmanylevel
-dividee = (-12000000/howmanylevel)
+dividee = (12000000/howmanylevel)
 speedee = (6500/howmanylevel)
 accee = (18000/howmanylevel)
 for ii in range(0,howmanylevel):
@@ -362,7 +362,6 @@ ips = commands.getoutput("/sbin/ifconfig | grep -iA2 \"eth0\" | grep -i \"inet\"
 iplist = ips.split(".")
 whoami = int(iplist[3]) - 1
 whoami = 3 * whoami
-whoami = whoami - 1 
 
 while True:
 
