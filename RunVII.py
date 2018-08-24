@@ -4,7 +4,7 @@ Created on 12.09.2016
 
 @author: Stefan Rossmann
 '''
-from ModbusClient import *
+from ModbusDelta import *
 import time
 import OSC
 import _thread
@@ -13,6 +13,7 @@ import types
 import math
 import random
 import argparse
+import commands
 
 IN = [False, False, False, False, False, False]
 def sec(idx, idx2):
@@ -232,6 +233,7 @@ def JogMotor(unit, JogWhat):
         print ("something wrong")
 
 def handler(socket,fortuple):
+    global whoami
     lastpos = 0
     lastspeed = 0
     lastacc = 0
@@ -252,16 +254,14 @@ def handler(socket,fortuple):
                     #print "seq %d phy %d sub_net %d uni %d net %d len %d" % \
                     #(sequence, physical, sub_net, universe, net, rgb_length)
                     idx = 18
-                    if universe == 0 and ( rawbytes[idx+10] != lastspeed or rawbytes[idx+9] != lastpos or rawbytes[idx+11] != lastacc ):
+                    if universe == 0 and ( rawbytes[idx+whoami+1] != lastspeed or rawbytes[idx+whoami] != lastpos or rawbytes[idx+whoami+2] != lastacc ):
                         #print ("1 %d 5 %d 7 %d 13 %d" % (lastpos , lastspeed, rawbytes[idx+9], rawbytes[idx+10]))
-                        lastpos = rawbytes[idx+9]
-                        lastspeed = rawbytes[idx+10]
-                        lastacc = rawbytes[idx+11]
+                        lastpos = rawbytes[idx+whoami]
+                        lastspeed = rawbytes[idx+whoami+1]
+                        lastacc = rawbytes[idx+whoami+2]
                         if len(func_list) > 0:
-                            #print rawbytes[idx+9]
                             func_list[0] =  ( lambda : moveMotor( 1, lastpos, lastspeed, lastacc ) )
                         else:
-                            #print rawbytes[idx+9]
                             func_list.append( lambda : moveMotor( 1, lastpos, lastspeed, lastacc ) )
         except ValueError:
             pass    
@@ -356,11 +356,14 @@ args = parser.parse_args()
 for jj in range(fromwho, towho):
     goZero(jj,args.z1,args.z2)
     #pass
-'''
-for next in range(fromwho, towho):
-    click ( next, random.randint(1,127) )
-    time.sleep(1)
-'''
+
+ips = commands.getoutput("/sbin/ifconfig | grep -iA2 \"eth0\" | grep -i \"inet\" | grep -iv \"inet6\" | " +
+                         "awk {'print $2'} | sed -ne 's/addr\://p'")
+iplist = ips.split(".")
+whoami = int(iplist[3]) - 1
+whoami = 3 * whoami
+whoami = whoami - 1 
+
 while True:
 
     for jj in func_list:
@@ -369,13 +372,7 @@ while True:
         func_list.pop(0)
         time.sleep(0.25)
     time.sleep(0.001)
-    #print artdmx[120]
-    '''
-    for ii in range(0,howmanylevel,1):
-        print ii
-        moveMotor(1,ii,0,255)
-        time.sleep(1)
-    '''
+
 modbusClient.close()
 #sock.close()
 server.close()
