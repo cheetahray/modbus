@@ -358,7 +358,7 @@ for jj in range(fromwho, towho):
     #pass
 
 ips = commands.getoutput("/sbin/ifconfig | grep -iA2 \"eth0\" | grep -i \"inet\" | grep -iv \"inet6\" | " +
-                         "awk {'print $2'} | sed -ne 's/addr\://p'")
+                         "awk {'print $2'} ") # | sed -ne 's/addr\://p'")
 iplist = ips.split(".")
 whoami = int(iplist[3]) - 1
 whoami = 3 * whoami
