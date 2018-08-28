@@ -658,14 +658,15 @@ class ModbusClient(object):
             data.append(CrcLSB)
             data.append(CrcMSB)
             self.printFAE("CMD10H req", data)
-            GPIO.output(EN_485,GPIO.HIGH)
             bytesToRead = 8
             self.my_mutex.acquire()
+            GPIO.output(EN_485,GPIO.HIGH)
             self.ser.write(data)
-            time.sleep(0.01)
+            time.sleep(0.003)
             GPIO.output(EN_485,GPIO.LOW)
-            time.sleep(self.writeTimeout - 0.01)
+            time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
+            print len(data)
             self.my_mutex.release()
             if len(data) > 1:            
                 if (data[1] == 0x90):
