@@ -333,6 +333,12 @@ server.timeout = 0.001
 def handle_timeout(self):
     self.timed_out = True
 
+ips = commands.getoutput("/sbin/ifconfig | grep -iA2 \"eth0\" | grep -i \"inet\" | grep -iv \"inet6\" | " +
+                         "awk {'print $2'} ") # | sed -ne 's/addr\://p'")
+iplist = ips.split(".")
+whoami = int(iplist[3]) - 1
+whoami = 3 * whoami
+
 # funny python's way to add a method to an instance of a class
 server.handle_timeout = types.MethodType(handle_timeout, server)
 
@@ -356,12 +362,6 @@ args = parser.parse_args()
 for jj in range(fromwho, towho):
     goZero(jj,args.z1,args.z2)
     #pass
-
-ips = commands.getoutput("/sbin/ifconfig | grep -iA2 \"eth0\" | grep -i \"inet\" | grep -iv \"inet6\" | " +
-                         "awk {'print $2'} ") # | sed -ne 's/addr\://p'")
-iplist = ips.split(".")
-whoami = int(iplist[3]) - 1
-whoami = 3 * whoami
 
 while True:
 
