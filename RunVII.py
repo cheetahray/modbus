@@ -4,7 +4,7 @@ Created on 12.09.2016
 
 @author: Stefan Rossmann
 '''
-from ModbusDelta import *
+from ModbusClient import *
 import time
 import OSC
 import _thread
@@ -314,7 +314,7 @@ dividee = (12000000/howmanylevel)
 speedee = (6500/howmanylevel)
 accee = (18000/howmanylevel)
 for ii in range(0,howmanylevel):
-    artdmx[ii] = int(ii * dividee)
+    artdmx[howmanylevel-ii-1] = int(ii * dividee)
     spddmx[ii] = int(ii * speedee) + 2500
     accdmx[ii] = 21000 - int(ii * accee )
 

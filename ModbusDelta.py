@@ -279,13 +279,13 @@ class ModbusClient(object):
             data[6] = CrcLSB
             data[7] = CrcMSB
             #self.printFAE("CMD03H req", data)
-            GPIO.output(EN_485,GPIO.HIGH)
             bytesToRead = 5+int(quantity*2)
             self.my_mutex.acquire()
+            GPIO.output(EN_485,GPIO.HIGH)
             self.ser.write(data)
-            time.sleep(0.01)
+            time.sleep(0.003)
             GPIO.output(EN_485,GPIO.LOW)
-            time.sleep(self.timeout + (quantity-1)*0.008 - 0.01)
+            time.sleep(self.timeout + (quantity-1)*0.008)
             data = self.ser.read(bytesToRead)
             self.my_mutex.release()
             myList = list()
@@ -491,13 +491,13 @@ class ModbusClient(object):
             data[6] = CrcLSB
             data[7] = CrcMSB
             self.printFAE("CMD06H req", data)
-            GPIO.output(EN_485,GPIO.HIGH)
             bytesToRead = 8
             self.my_mutex.acquire()
+            GPIO.output(EN_485,GPIO.HIGH)
             self.ser.write(data)
-            time.sleep(0.01)
+            time.sleep(0.003)
             GPIO.output(EN_485,GPIO.LOW)
-            time.sleep(self.writeTimeout - 0.01)
+            time.sleep(self.writeTimeout)
             data = self.ser.read(bytesToRead)
             self.my_mutex.release()
             if len(data) > 1:
